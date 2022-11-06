@@ -1,0 +1,102 @@
+---
+title: "QRM5846 Group Project"
+author: "Peiling Jin, Jiachen Liu, Rashi Lodhi, Yaoyuan Zhang"
+format: pdf
+editor: visual
+---
+
+```{r}
+#| include: false
+#| warning: false
+library(tidyquant)
+library(tidyverse)
+library(fpp3)
+library(ggplot2)
+```
+
+
+## Data Aquisition
+
+Start with S&P 500
+
+```{r}
+sp_prices <- tq_get("^GSPC",
+                 get = "stock.prices",
+                 from = "2000-01-01",
+                 to = "2021-12-31")
+```
+
+## EDA
+
+```{r}
+sp_info <- sp_prices |>
+  arrange(date) |>
+  mutate(return = log(adjusted) - log(lag(adjusted)), 
+         price = adjusted) |>
+  select(date, price, return)
+```
+
+#### Summary statistics of price
+
+```{r}
+stat_names <- c(
+  "Min Value", 
+  "1st Quantile", 
+  "Median", 
+  "3rd Quantile", 
+  "Max Value", 
+  "Mean", 
+  "Skewness", 
+  "Kurtosis"
+)
+
+sum_stat <- unname(summary(sp_info$price))
+stat_value <- c(sum_stat[1:3], sum_stat[5:6], sum_stat[4], skewness(sp_info$price), kurtosis(sp_info$price))
+```
+
+```{r}
+stat_table <- data.frame(Statistics = stat_names, 
+                         Value = stat_value)
+stat_table
+```
+
+
+#### Visualization and normality test of logged returns
+
+```{r}
+sp_info |>
+  drop_na(return) |>
+  mutate(trading_day = row_number()) |>
+  as_tsibble(index = trading_day) |>
+  autoplot(return, color = "darkolivegreen4") + 
+  labs(title = "Log Return of S&P 500")
+  
+```
+
+```{r}
+c(skewness(sp_info$return), kurtosis(sp_info$return))
+```
+
+
+```{r}
+sp_info |>
+  drop_na(return) |>
+  ggplot(aes(sample = return))+ 
+  geom_qq(color = "darkred", alpha = 0.3) + 
+  geom_qq_line(lwd = 0.8) + 
+  labs(title = "QQ plot of log returns of S&P 500")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
