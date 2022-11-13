@@ -127,11 +127,16 @@ lstm_model %>% fit(
     x = x_train_arr,
     y = y_train_arr,
     batch_size = 1,
-    epochs = 20,
+    epochs = 5,
     verbose = 0,
     shuffle = FALSE
 )
 ```
+
+```{r}
+
+```
+
 
 
 
