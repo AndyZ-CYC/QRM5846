@@ -5,23 +5,154 @@ format: pdf
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
+```{r, echo=FALSE, warning=FALSE}
+#| warning: false
+library(tidyquant)
+library(tidyverse)
+library(tensorflow)
+library(keras)
+# install_keras()
+# install_tensorflow(version = "nightly")
 ```
 
-You can add options to executable code like this
-
 ```{r}
-#| echo: false
-2 * 2
+sp_prices <- tq_get("^GSPC",
+                 get = "stock.prices",
+                 from = "2010-01-01",
+                 to = "2020-01-01")
+
+prices <- sp_prices |>
+  arrange(date) |>
+  mutate(return = log(adjusted) - log(lag(adjusted)), 
+         price = adjusted) |>
+  select(date, price, return)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+#### Train-test split
+
+```{r}
+scale_factors <- c(mean(prices$price), sd(prices$price))
+```
+
+```{r}
+prices |>
+  filter(date < ("2018-01-01")) |>
+  select(price) |>
+  mutate(price = (price - scale_factors[1]) / scale_factors[2]) -> scaled_train
+
+prices |>
+  filter(date >= ("2018-01-01")) |>
+  select(price) |>
+  mutate(price = (price - scale_factors[1]) / scale_factors[2]) -> scaled_test
+```
+
+#### Set scale of prediction and lag
+
+```{r}
+# set prediction and lag
+prediction <- 22
+lag <- 22
+```
+
+#### Prepare X training data
+
+```{r}
+scaled_train <- as.matrix(scaled_train)
+
+# lag data 21 times, arrange into columns
+x_train_data <- t(sapply(
+  1:(length(scaled_train) - lag - prediction + 1), 
+  function(x) scaled_train[x: (x + lag - 1), 1]
+))
+
+x_train_arr <- array(
+  data = as.numeric(unlist(x_train_data)), 
+  dim = c(
+    nrow(x_train_data), 
+    lag, 
+    1
+  )
+)
+```
+
+#### Prepare y training data
+
+```{r}
+y_train_data <- t(sapply(
+  (1 + lag):(length(scaled_train) - prediction + 1), 
+  function(x) scaled_train[x: (x + prediction - 1), 1]
+)) 
+
+y_train_arr <- array(
+  data = as.numeric(unlist(y_train_data)), 
+  dim = c(
+    nrow(y_train_data), 
+    prediction, 
+    1
+  )
+)
+```
+
+#### Reserved space for testing data
+
+
+
+#### LSTM Prediction
+
+```{r}
+lstm_model <- keras_model_sequential()
+
+lstm_model |>
+  layer_lstm(units = 50, 
+             batch_input_shape = c(1, 22, 1), 
+             return_sequences = TRUE, 
+             stateful = TRUE) |>
+  layer_dropout(rate = 0.5) |>
+  layer_lstm(units = 50, 
+             return_sequences = TRUE, 
+             stateful = TRUE) |>
+  layer_dropout(rate = 0.5) |>
+  time_distributed(keras::layer_dense(units = 1))
+```
+
+```{r}
+lstm_model %>%
+    compile(loss = 'mae', optimizer = 'adam', metrics = 'accuracy')
+ 
+summary(lstm_model)
+```
+
+```{r}
+lstm_model %>% fit(
+    x = x_train_arr,
+    y = y_train_arr,
+    batch_size = 1,
+    epochs = 20,
+    verbose = 0,
+    shuffle = FALSE
+)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
