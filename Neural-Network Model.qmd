@@ -50,7 +50,7 @@ prices |>
 
 ```{r}
 # set prediction and lag
-prediction <- 22
+prediction <- 1
 lag <- 22
 ```
 
@@ -86,7 +86,7 @@ y_train_data <- t(sapply(
 y_train_arr <- array(
   data = as.numeric(unlist(y_train_data)), 
   dim = c(
-    nrow(y_train_data), 
+    length(y_train_data), 
     prediction, 
     1
   )
@@ -108,16 +108,17 @@ lstm_model |>
              return_sequences = TRUE, 
              stateful = TRUE) |>
   layer_dropout(rate = 0.5) |>
-  layer_lstm(units = 50, 
-             return_sequences = TRUE, 
-             stateful = TRUE) |>
+  layer_lstm(units = 50) |>
   layer_dropout(rate = 0.5) |>
-  time_distributed(keras::layer_dense(units = 1))
+  layer_dense(units = 1)
+#  time_distributed(keras::layer_dense(units = 1))
 ```
 
 ```{r}
+## accuracy?
 lstm_model %>%
-    compile(loss = 'mae', optimizer = 'adam', metrics = 'accuracy')
+#  compile(loss = 'mae', optimizer = 'adam')
+    compile(loss = 'mse', optimizer = 'adam', metrics = 'mae')
  
 summary(lstm_model)
 ```
@@ -130,11 +131,11 @@ lstm_model %>% fit(
     epochs = 5,
     verbose = 0,
     shuffle = FALSE
-)
+) -> history
 ```
 
 ```{r}
-
+plot(history)
 ```
 
 
