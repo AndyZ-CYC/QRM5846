@@ -5,7 +5,7 @@ format: pdf
 editor: visual
 ---
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 #| warning: false
 library(tidyquant)
 library(tidyverse)
@@ -26,6 +26,84 @@ prices <- sp_prices |>
   mutate(return = log(adjusted) - log(lag(adjusted)), 
          price = adjusted) |>
   select(date, price, return)
+```
+
+#### Binary - movement
+
+```{r}
+prices_movement <- prices %>% 
+  mutate(movement = case_when(return >= 0 ~ 1, TRUE ~ 0)) %>% 
+  drop_na()
+prices_movement %>% head(3)
+```
+
+```{r}
+prediction <- 1
+lag <- 22
+
+train_movement <- as.matrix(prices_movement %>% select(movement))
+
+# lag data 21 times, arrange into columns
+x_train_data <- t(sapply(
+  1:(length(train_movement) - lag - prediction + 1), 
+  function(x) train_movement[x: (x + lag - 1), 1]
+))
+
+x_train_arr <- array(
+  data = as.numeric(unlist(x_train_data)), 
+  dim = c(
+    nrow(x_train_data), 
+    lag, 
+    1
+  )
+)
+
+y_train_data <- t(sapply(
+  (1 + lag):(length(train_movement) - prediction + 1), 
+  function(x) train_movement[x: (x + prediction - 1), 1]
+)) 
+
+y_train_arr <- array(
+  data = as.numeric(unlist(y_train_data)), 
+  dim = c(
+    length(y_train_data), 
+    prediction, 
+    1
+  )
+)
+```
+
+```{r}
+movement_model <- keras_model_sequential()
+
+movement_model |>
+  layer_lstm(units = 50, 
+             batch_input_shape = c(1, 22, 1), 
+             return_sequences = TRUE, 
+             stateful = TRUE) |>
+  layer_dropout(rate = 0.5) |>
+  layer_lstm(units = 50) |>
+  layer_dropout(rate = 0.5) |>
+  layer_dense(units = 1)
+#  time_distributed(keras::layer_dense(units = 1))
+
+movement_model %>%
+    compile(loss = 'binary_crossentropy', optimizer = 'adam', metrics = 'accuracy')
+ 
+summary(movement_model)
+```
+
+```{r}
+movement_model %>% fit(
+    x = x_train_arr,
+    y = y_train_arr,
+    batch_size = 1,
+    epochs = 5,
+    verbose = 0,
+    shuffle = FALSE
+) -> history_movement
+
+plot(history_movement)
 ```
 
 #### Train-test split
@@ -95,8 +173,6 @@ y_train_arr <- array(
 
 #### Reserved space for testing data
 
-
-
 #### LSTM Prediction
 
 ```{r}
@@ -137,28 +213,3 @@ lstm_model %>% fit(
 ```{r}
 plot(history)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
