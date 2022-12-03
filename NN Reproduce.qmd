@@ -1,0 +1,110 @@
+---
+title: "Neural-Network Model"
+author: "Jiachen Liu, Yaoyuan Zhang"
+format: pdf
+editor: visual
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#| warning: false
+library(tidyquant)
+library(tidyverse)
+library(tensorflow)
+library(keras)
+# install_keras()
+# install_tensorflow(version = "nightly")
+```
+
+```{r}
+sp_prices <- tq_get("^GSPC",
+                 get = "stock.prices",
+                 from = "2000-01-03",
+                 to = "2019-07-01")
+
+prices <- sp_prices |>
+  arrange(date) |>
+  select(-symbol)
+```
+
+```{r}
+# normalization
+prices[, -1] <- prices[, -1] %>% apply(2, scale)
+
+# train test split
+split_date <- "2019-05-17"
+prices |> filter(date < split_date) %>% as.matrix() -> train_data
+prices |> filter(date >= split_date) %>% as.matrix() -> test_data
+```
+
+```{r}
+# data preparation
+data_prep <- function(scaled_data, prediction = 1, lag = 22, y_type = 2){
+
+  x_data <- t(sapply(1:(dim(scaled_data)[1] - lag - prediction + 1),
+                  function(x) scaled_data[x: (x + lag - 1), -1]))
+              
+  x_arr <- array(data = as.numeric(unlist(x_data)), 
+                 dim = c(nrow(x_data), lag, 1))
+  
+  # the 2nd column is opening price, 7th is adjusted price
+  y_data <- t(sapply((1 + lag):(dim(scaled_data)[1] - prediction + 1), 
+                     function(x) scaled_data[x: (x + prediction - 1), y_type])) 
+  
+  y_arr <- array(data = as.numeric(unlist(y_data)), 
+                 dim = c(length(y_data), prediction, 1))
+  
+  return(list(x = x_arr, y = y_arr))
+}
+
+x_train = data_prep(train_data, 2)$x
+y_train = data_prep(train_data, 2)$y
+x_test = data_prep(test_data, 2)$x
+y_test = data_prep(test_data, 2)$y
+
+dim(x_train) #这个dim有点问题，之前不能用sapply，得写loop，懒得弄了换essay吧
+```
+
+```{r}
+# LSTM model
+lstm_model <- keras_model_sequential()
+
+lstm_model |>
+  layer_lstm(units = 10, 
+             batch_input_shape = c(7, 22, 1), 
+             return_sequences = TRUE, 
+             stateful = TRUE) |>
+  layer_flatten() |>
+  layer_dense(units = 1)
+  
+
+lstm_model %>% compile(loss = 'mse', 
+                       optimizer = optimizer_adam(learning_rate = 0.0001), 
+                       metrics = 'mae')
+summary(lstm_model)
+```
+
+```{r}
+lstm_model %>% fit(
+    x = x_train,
+    y = y_train,
+    batch_size = 1,
+    epochs = 5,
+    verbose = 0,
+    shuffle = FALSE
+) -> history
+
+plot(history) #因为output不止1个算不出loss所以不会converge
+```
+
+```{r}
+# evaluation
+model_eval <- function(y, pred){
+  mse <- mean((pred - y)^2)
+  mae <- mean(abs(pred-y))
+  rmse <- sqrt(mean(pred-y)^2)
+  rsq <- sum((pred-mean(y))^2)/sum((y-mean(y))^2)
+  return(c(mse, mae, rmse, rsq))
+}
+
+model_eval(y_test, keras::predict(lstm_model, x_test))
+```

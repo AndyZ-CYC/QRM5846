@@ -18,8 +18,8 @@ library(keras)
 ```{r}
 sp_prices <- tq_get("^GSPC",
                  get = "stock.prices",
-                 from = "2010-01-01",
-                 to = "2020-01-01")
+                 from = "2000-01-03",
+                 to = "2019-07-01")
 
 prices <- sp_prices |>
   arrange(date) |>
@@ -36,12 +36,12 @@ scale_factors <- c(mean(prices$price), sd(prices$price))
 
 ```{r}
 prices |>
-  filter(date < ("2018-01-01")) |>
+  filter(date < ("2019-05-17")) |>
   select(price) |>
   mutate(price = (price - scale_factors[1]) / scale_factors[2]) -> scaled_train
 
 prices |>
-  filter(date >= ("2018-01-01")) |>
+  filter(date >= ("2019-05-17")) |>
   select(price) |>
   mutate(price = (price - scale_factors[1]) / scale_factors[2]) -> scaled_test
 ```
