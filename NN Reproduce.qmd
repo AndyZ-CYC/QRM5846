@@ -5,6 +5,45 @@ format: pdf
 editor: visual
 ---
 
+```{r setup, include=FALSE, echo=FALSE}
+
+```
+
+# RNN-LSTM Model
+
+## Recurrent Neural Network(RNN)
+
+A **recurrent neural network** is a class of artificial neural network that uses sequential or time series data. Unlike Feedforward Neural Network, RNN allows the output from some nodes to affect subsequent input to the same nodes by using connections between nodes to create cycles. As a result, the hidden layers produce the outputs with the input information and prior "memory" received from previous learning.
+
+![Rolled RNN and Unrolled RNN](images/unroll-RNN.jpg)
+
+Another distinguish characteristic of RNN is that they share parameters across each layer of the network. Unlike feedforward neural networks having individual weight and bias for each node in one layer, recurrent neural networks share the same weight parameter within each layer. However, these weights are still adjusted during the processes of backpropagation and gradient descent to facilitate reinforcement learning. 
+
+In feedforward neural network, backpropagation algorithm was used to calculate the gradient with respect to the weights. Recurrent neural network, on the other side, leverage backpropagation through time (BPTT) algorithm to determine the gradient as BPTT is specific to sequential data. 
+
+## Activation Functions
+
+In neural networks, an activation fucntion determines whether a neuron should be activated and typically maps the input to $[0, 1]$ or $[-1, 1]$. The followings are two of the most commonly used activation functions and will be adopted later: 
+
+#### Sigmoid
+
+$$
+S(x) = \frac{1}{1 + e^{-x}}
+$$
+
+#### Tanh (Hyperbolic tangent)
+
+$$
+tanh(x) = \frac{e^{x}-e^{-x}}{e^{x}+e^{-x}}
+$$
+
+## Long Short-term Memory (LSTM)
+
+Long short-term memory network, usually known as LSTM, is a specific RNN architecture first introduced by Sepp Hochreiter and Juergen Schmidhuber as a solution to vanishing gradient problem. Recall with an RNN, similar with human reading a book and remembering what happened in the earlier chapter, it remembers the previous information and use it for processing the current input. The shortcoming of the NN is that it is not able to remember long term dependencies due to the vanishing gradient. The LSTM is designed to alleviate and avoid such issues. 
+
+The LSTM consists of three parts
+
+
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 #| warning: false
 library(tidyquant)
@@ -78,7 +117,7 @@ lstm_model |>
   
 
 lstm_model %>% compile(loss = 'mse', 
-                       optimizer = optimizer_adam(learning_rate = 0.0001), 
+                       optimizer = "adam", 
                        metrics = 'mae')
 summary(lstm_model)
 ```
@@ -88,7 +127,7 @@ lstm_model %>% fit(
     x = x_train,
     y = y_train,
     batch_size = 1,
-    epochs = 5,
+    epochs = 10,
     verbose = 0,
     shuffle = FALSE
 ) -> history
