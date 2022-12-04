@@ -5,3 +5,5 @@ LSTM original - https://www.bioinf.jku.at/publications/older/2604.pdf
 stock price prediction with RNN - https://library.ndsu.edu/ir/bitstream/handle/10365/28797/Stock%20Price%20Prediction%20Using%20Recurrent%20Neural%20Networks.pdf?sequence=1&isAllowed=y
 
 intro to lstm - https://www.analyticsvidhya.com/blog/2021/03/introduction-to-long-short-term-memory-lstm/
+
+understanding lstm - https://colah.github.io/posts/2015-08-Understanding-LSTMs/
