@@ -1,0 +1,114 @@
+---
+title: "QRM_SGARCH"
+format: html
+editor: visual
+---
+
+```{r message=FALSE}
+#Load packages
+library(tidyquant)
+library(fpp3)
+library(rugarch)
+```
+
+## Data Import
+
+```{r}
+# Import Data
+sp_prices <- tq_get("^GSPC",
+                 get = "stock.prices",
+                 from = "2000-01-01",
+                 to = "2021-12-31")
+```
+
+## Compute log return
+
+```{r}
+#Compute the log returns
+returns <- sp_prices |>
+  arrange(date) |>
+  mutate(ret = log(adjusted) - log(lag(adjusted))) |>
+  select(symbol, date, ret) |>
+  drop_na(ret)
+
+data <- returns
+```
+
+## Specify SGARCH model
+
+```{r}
+# Specify sGARCH model
+spec <- ugarchspec(
+    variance.model =
+      list(model = "sGARCH",
+           garchOrder = c(1,1)),
+      mean.model =
+      list(armaOrder = c(0,0),
+      include.mean = FALSE),
+    distribution.model = "std"
+)
+```
+
+## Fit model
+
+```{r}
+# Fit to the data
+data %>%
+  pull(ret) -> y
+
+sGARCH <- ugarchfit(spec = spec,
+                     data = y,
+                    out.sample = 1000)
+coef(sGARCH)
+```
+
+## Student-t histogram
+
+```{r}
+plot(sGARCH, which = 8)
+```
+
+## Q-Q plot
+
+```{r}
+plot(sGARCH, which = 9)
+```
+
+## Residual Diagnostic
+
+```{r}
+# Standardized residuals
+plot(sGARCH, which = 10)
+
+# Standardaied Squared residuals
+plot(sGARCH, which = 11)
+```
+
+## Extract residual and convert to tissble
+
+```{r}
+res_g <- sGARCH@fit$z
+
+
+tibble(data$date,res_g) %>%
+mutate(date =`data$date`) %>%
+mutate(z = res_g)-> res_g_tb
+
+res_g_tb %>%
+as_tsibble(index = date) %>%
+select(z) -> res_ts
+
+res_ts <- res_ts %>%
+mutate(trading_day = row_number()) %>%
+update_tsibble(index = trading_day,
+regular = TRUE)
+```
+
+## Error Metric
+
+```{r}
+sgarch.fcst <- ugarchforecast(sGARCH, n.roll = 1000,  n.ahead=1)
+fcst.list <- list(sgarch.fcst)
+fpm.mat <- sapply(fcst.list, fpm)
+fpm.mat
+```
