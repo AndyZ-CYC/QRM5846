@@ -23,7 +23,7 @@ In feedforward neural network, backpropagation algorithm was used to calculate t
 
 ## Activation Functions
 
-In neural networks, an activation fucntion determines whether a neuron should be activated and typically maps the input to $[0, 1]$ or $[-1, 1]$. The followings are two of the most commonly used activation functions and will be adopted later:
+In neural networks, an activation function determines whether a neuron should be activated and typically maps the input to $[0, 1]$ or $[-1, 1]$. The followings are two of the most commonly used activation functions and will be adopted later:
 
 #### Sigmoid
 
@@ -66,7 +66,7 @@ After that, a `sigmoid` function is applied over $f_t$ and make it a number betw
 
 ### Input Gate and new information
 
-Next we decide what new information we will store in the cell state. First, the input gate decides which values we'll update with sigmoid activation function:
+Next we decide what new information we will store in the cell state. First, the input gate decides which values we'll update with `sigmoid` activation function:
 
 $$
 i_t = \sigma(W_i\cdot[x_t, h_{t-1}] + b_i)
@@ -76,7 +76,7 @@ Where
 
 -   $W_f = \text{weight matrix of the input associated with hidden state}$
 
-Next, the new information is sent through a tanh layer to create the new candidate values:
+Next, the new information is sent through a `tanh` layer to create the new candidate values:
 
 $$
 \tilde{C_t} = tanh(W_C\cdot[x_t, h_{t-1}] + b_C)
@@ -110,11 +110,11 @@ $$
 
 The previous steps conclude the architecture of the LSTM. The whole process can be summarized and displayed as the following:
 
-![LSTM Chain](images\LSTM-chain.png)
+![LSTM Chain](images%5CLSTM-chain.png)
 
 ## Application in Tensorflow
 
-We implement the LSTM by using the package `tensorflow`. The LSTM model in the `keras` package of `tensorflow` follows our previous description by using the `tanh` function as the activation function and the `sigmoid` function as the recurrent activation function. 
+We implement the LSTM by using the package `tensorflow`. The LSTM model in the `keras` package of `tensorflow` follows our previous description by using the `tanh` function as the activation function and the `sigmoid` function as the recurrent activation function.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 #| warning: false
