@@ -73,6 +73,8 @@ x_train_arr <- array(
     1
   )
 )
+
+dim(x_train_arr)
 ```
 
 #### Prepare y training data

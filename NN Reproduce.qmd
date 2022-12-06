@@ -110,11 +110,11 @@ $$
 
 The previous steps conclude the architecture of the LSTM. The whole process can be summarized and displayed as the following:
 
-![LSTM Chain](images\LSTM-chain.png)
+![LSTM Chain](images%5CLSTM-chain.png)
 
 ## Application in Tensorflow
 
-We implement the LSTM by using the package `tensorflow`. The LSTM model in the `keras` package of `tensorflow` follows our previous description by using the `tanh` function as the activation function and the `sigmoid` function as the recurrent activation function. 
+We implement the LSTM by using the package `tensorflow`. The LSTM model in the `keras` package of `tensorflow` follows our previous description by using the `tanh` function as the activation function and the `sigmoid` function as the recurrent activation function.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 #| warning: false
@@ -127,15 +127,155 @@ library(keras)
 ```
 
 ```{r}
-sp_prices <- tq_get("^GSPC",
-                 get = "stock.prices",
-                 from = "2000-01-03",
-                 to = "2019-07-01")
+start_date = "2013-01-01"
+end_date = "2017-12-31"
 
-prices <- sp_prices |>
+sp_prices <- tq_get("NFLX", #"^GSPC",
+                 get = "stock.prices",
+                 from = start_date,
+                 to = end_date)
+
+stock <- sp_prices |>
   arrange(date) |>
-  select(-symbol)
+  select(date, adjusted) |>
+  column_to_rownames('date')
 ```
+
+```{r}
+train_set = stock[1:1008,]
+
+# Max Min Scaler
+max_min_scale <- function(x, name = 'value') {
+  df <- data.frame((x- min(x)) /(max(x)-min(x)))
+  colnames(df) <- name
+  return(df)
+}
+
+max_min_scale_reverse <- function(y, x) {
+  min(x) + y * (max(x)-min(x))
+}
+
+train_scaled <- train_set %>% max_min_scale
+```
+
+```{r}
+# data preparation
+data_prep <- function(scaled_data, prediction = 1, lag = 22){
+  x_data <- t(sapply(1:(dim(scaled_data)[1] - lag - prediction + 1),
+                  function(x) scaled_data[x: (x + lag - 1), 1]))
+  x_arr <- array(data = as.numeric(unlist(x_data)), 
+                 dim = c(nrow(x_data), lag, 1))
+  y_data <- t(sapply((1 + lag):(dim(scaled_data)[1] - prediction + 1), 
+                     function(x) scaled_data[x: (x + prediction - 1), 1])) 
+  y_arr <- array(data = as.numeric(unlist(y_data)), 
+                 dim = c(length(y_data), prediction, 1))
+  return(list(x = x_arr, y = y_arr))
+}
+
+x_train = data_prep(train_scaled)$x
+y_train = data_prep(train_scaled)$y
+
+dim(x_train)
+dim(y_train)
+```
+
+```{r}
+num_neurons = 50
+learning_rate = 0.002
+#num_train_iterations = 4000
+
+# Define LSTM
+get_model <- function(){
+  model <- keras_model_sequential() |>
+    layer_lstm(units = num_neurons, 
+               batch_input_shape = c(1, 22, 1), 
+               activation = 'relu') |>
+    layer_dense(units = 1)
+  model %>% compile(loss = 'mse', 
+                       optimizer = optimizer_adam(learning_rate = learning_rate), 
+                       metrics = 'mae')
+}
+
+
+lstm_model <- get_model()
+summary(lstm_model)
+```
+
+```{r}
+lstm_model %>% fit(
+    x = x_train,
+    y = y_train,
+    batch_size = 1,
+    epochs = 10,
+    verbose = 2,
+    #callbacks = Callbacks,
+    shuffle = FALSE
+) -> history
+
+plot(history)
+```
+
+```{r}
+predictions <- vector(length = 251L)
+pred_data <- train_set
+
+for (i in 1:251){
+  n <- 1008 + i
+  test_set = pred_data[(n-22):n]
+  test_scaled <- test_set %>% max_min_scale
+  x_test = data_prep(test_scaled)$x
+  y_pred_scaled <- predict(lstm_model, x_test, verbose = 2)
+  y_pred <- max_min_scale_reverse(y_pred_scaled, test_set)
+  predictions[i] <- y_pred
+  pred_data <- pred_data %>% append(y_pred)
+}
+
+plot(predictions,type = 'l')
+```
+
+```{r}
+predictions <- vector(length = 251L)
+
+for (i in 1:251){
+  n <- 1008 + i
+  test_set = stock$adjusted[(n-22):n]
+  test_scaled <- test_set %>% max_min_scale
+  x_test = data_prep(test_scaled)$x
+  y_pred_scaled <- predict(lstm_model, x_test, verbose = 0)
+  y_pred <- max_min_scale_reverse(y_pred_scaled, test_set)
+  predictions[i] <- y_pred
+}
+
+plot(predictions,type = 'l', col = 'red')
+lines(stock$adjusted[(1259-250):1259])
+```
+
+```{r}
+pred_df <- data.frame('pred' = predictions,
+                      'actual' = stock$adjusted[(1259-250):1259]) %>% 
+  pivot_longer(cols = c(pred, actual), names_to = "type", 
+               values_to = "price") %>% 
+    mutate(fill = case_when(type == 'pred' ~ "dark blue", T ~ 'violet'))
+
+ggplot(pred_df, aes(x=price, fill=fill, col = 'gray')) +
+  geom_histogram(binwidth=5, colour="black", position="dodge") +
+ scale_fill_identity()
+```
+
+```{r}
+# evaluation
+model_eval <- function(y, pred){
+  mse <- mean((pred - y)^2)
+  mae <- mean(abs(pred-y))
+  rmse <- sqrt(mean(pred-y)^2)
+  rsq <- sum((pred-mean(y))^2)/sum((y-mean(y))^2)
+  return(c(mse, mae, rmse, rsq))
+}
+
+model_eval(stock$adjusted[(1259-250):1259], predictions)
+```
+
+## Application in Tensorflow
 
 ```{r}
 # normalization
@@ -171,8 +311,6 @@ x_train = data_prep(train_data, 2)$x
 y_train = data_prep(train_data, 2)$y
 x_test = data_prep(test_data, 2)$x
 y_test = data_prep(test_data, 2)$y
-
-dim(x_train) #这个dim有点问题，之前不能用sapply，得写loop，懒得弄了换essay吧
 ```
 
 ```{r}
