@@ -179,7 +179,7 @@ dim(x_train)
 dim(y_train)
 ```
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 num_neurons = 50
 learning_rate = 0.002
 #num_train_iterations = 4000
@@ -189,8 +189,11 @@ get_model <- function(){
   model <- keras_model_sequential() |>
     layer_lstm(units = num_neurons, 
                batch_input_shape = c(1, 22, 1), 
-               activation = 'relu') |>
-    layer_dense(units = 1)
+               activation = 'relu',
+               stateful = TRUE) |>
+    layer_dense(units = 1) 
+  
+  
   model %>% compile(loss = 'mse', 
                        optimizer = optimizer_adam(learning_rate = learning_rate), 
                        metrics = 'mae')
@@ -202,13 +205,14 @@ summary(lstm_model)
 ```
 
 ```{r}
+set_random_seed(1209)
+lstm_model <- get_model()
 lstm_model %>% fit(
     x = x_train,
     y = y_train,
     batch_size = 1,
-    epochs = 10,
+    epochs = 15,
     verbose = 2,
-    #callbacks = Callbacks,
     shuffle = FALSE
 ) -> history
 
@@ -250,16 +254,32 @@ plot(predictions,type = 'l', col = 'red')
 lines(stock$adjusted[(1259-250):1259])
 ```
 
-```{r}
-pred_df <- data.frame('pred' = predictions,
-                      'actual' = stock$adjusted[(1259-250):1259]) %>% 
-  pivot_longer(cols = c(pred, actual), names_to = "type", 
-               values_to = "price") %>% 
-    mutate(fill = case_when(type == 'pred' ~ "dark blue", T ~ 'violet'))
+```{r, message=FALSE}
+pred_df <- data.frame('date' = rownames(stock)[(1259-250):1259] %>% as_date(),
+                      'pred' = predictions,
+                      'actual' = stock$adjusted[(1259-250):1259])
+pred_df_long <- pred_df %>% pivot_longer(cols = c(pred, actual), 
+                       names_to = "type", values_to = "price")
 
-ggplot(pred_df, aes(x=price, fill=fill, col = 'gray')) +
-  geom_histogram(binwidth=5, colour="black", position="dodge") +
- scale_fill_identity()
+pred_df_monthly <- pred_df_long %>% mutate(month = month.abb[month(date)]) %>%
+  group_by(month, type) %>% summarise(avg_price = mean(price))
+
+pred_df_monthly$month <- factor(pred_df_monthly$month, levels = month.abb)
+```
+
+```{r}
+ggplot(pred_df_monthly, aes(x=month, y=avg_price, fill=type)) +
+  geom_bar(stat = "identity", position="dodge", width = 0.65) +
+  scale_fill_manual(values = c('pred' = 'violet', "actual" = 'dark blue'))
+```
+
+```{r}
+# Percentage Error
+per_err <- pred_df %>% mutate(percent_err = abs(pred-actual)/actual * 100) %>% 
+  pull(percent_err)
+mean(per_err)
+StdDev(per_err)
+quantile(per_err)
 ```
 
 ```{r}
@@ -275,7 +295,7 @@ model_eval <- function(y, pred){
 model_eval(stock$adjusted[(1259-250):1259], predictions)
 ```
 
-## Application in Tensorflow
+## Other models
 
 ```{r}
 # normalization

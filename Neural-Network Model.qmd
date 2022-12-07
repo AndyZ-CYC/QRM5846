@@ -130,7 +130,7 @@ lstm_model %>% fit(
     y = y_train_arr,
     batch_size = 1,
     epochs = 5,
-    verbose = 0,
+    verbose = 2,
     shuffle = FALSE
 ) -> history
 ```
