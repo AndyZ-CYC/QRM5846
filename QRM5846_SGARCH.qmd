@@ -172,3 +172,8 @@ for (d in 0:fore_length) {
     )
     
 ```
+
+```{r}
+spec
+```
+
