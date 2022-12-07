@@ -298,71 +298,63 @@ model_eval(stock$adjusted[(1259-250):1259], predictions)
 ## Other models
 
 ```{r}
+# Data
+sp_prices <- tq_get("^GSPC",
+                 get = "stock.prices",
+                 from = "2000-01-01",
+                 to = "2021-12-31")
+
+return <- sp_prices |>
+  arrange(date) |>
+  mutate(return = log(adjusted) - log(lag(adjusted))) |>
+  drop_na(return) %>% 
+  select(date, return)
+
 # normalization
-prices[, -1] <- prices[, -1] %>% apply(2, scale)
+return$return <- max_min_scale(return$return) %>% pull(value)
 
 # train test split
 split_date <- "2019-05-17"
-prices |> filter(date < split_date) %>% as.matrix() -> train_data
-prices |> filter(date >= split_date) %>% as.matrix() -> test_data
-```
+return |> filter(date < split_date) %>% select(return) -> train_data
+return |> filter(date >= split_date) %>% select(return) -> test_data
 
-```{r}
 # data preparation
-data_prep <- function(scaled_data, prediction = 1, lag = 22, y_type = 2){
-
-  x_data <- t(sapply(1:(dim(scaled_data)[1] - lag - prediction + 1),
-                  function(x) scaled_data[x: (x + lag - 1), -1]))
-              
-  x_arr <- array(data = as.numeric(unlist(x_data)), 
-                 dim = c(nrow(x_data), lag, 1))
-  
-  # the 2nd column is opening price, 7th is adjusted price
-  y_data <- t(sapply((1 + lag):(dim(scaled_data)[1] - prediction + 1), 
-                     function(x) scaled_data[x: (x + prediction - 1), y_type])) 
-  
-  y_arr <- array(data = as.numeric(unlist(y_data)), 
-                 dim = c(length(y_data), prediction, 1))
-  
-  return(list(x = x_arr, y = y_arr))
-}
-
-x_train = data_prep(train_data, 2)$x
-y_train = data_prep(train_data, 2)$y
-x_test = data_prep(test_data, 2)$x
-y_test = data_prep(test_data, 2)$y
+x_train_new = data_prep(train_data)$x
+y_train_new = data_prep(train_data)$y
 ```
 
 ```{r}
 # LSTM model
-lstm_model <- keras_model_sequential()
+lstm_model_new <- keras_model_sequential()
 
-lstm_model |>
-  layer_lstm(units = 10, 
-             batch_input_shape = c(7, 22, 1), 
+lstm_model_new |>
+  layer_lstm(units = 50, 
+             batch_input_shape = c(1, 22, 1), 
              return_sequences = TRUE, 
              stateful = TRUE) |>
-  layer_flatten() |>
+  layer_dropout(rate = 0.5) |>
+  layer_lstm(units = 50) |>
+  layer_dropout(rate = 0.5) |>
   layer_dense(units = 1)
-  
 
-lstm_model %>% compile(loss = 'mse', 
-                       optimizer = "adam", 
-                       metrics = 'mae')
-summary(lstm_model)
+lstm_model_new %>%
+    compile(loss = 'mse', optimizer = optimizer_adam(learning_rate = 0.0001), 
+            metrics = 'mae')
+ 
+summary(lstm_model_new)
 ```
 
 ```{r}
-lstm_model %>% fit(
+lstm_model_new %>% fit(
     x = x_train,
     y = y_train,
     batch_size = 1,
     epochs = 10,
-    verbose = 0,
+    verbose = 2,
     shuffle = FALSE
 ) -> history
 
-plot(history) #因为output不止1个算不出loss所以不会converge
+plot(history) 
 ```
 
 ```{r}
@@ -376,4 +368,37 @@ model_eval <- function(y, pred){
 }
 
 model_eval(y_test, keras::predict(lstm_model, x_test))
+```
+
+```{r}
+model_prediction <- function(test_set, whole_data, model){
+  # test_set should only have one olumn of predict variable
+  # whole_data should have one column 'date' and predict variable
+  t <- nrow(test_set)
+  Tt <- nrow(whole_data)
+  t_start <- Tt - t + 1
+  y <- whole_data %>% select(-date)
+  predictions <- vector(length = t)
+  
+  for (i in 1:t){
+    n <- t_start - 1 + i
+    test_set = whole_data[(n-22):n,]
+    test_scaled <- test_set %>% max_min_scale
+    x_test = data_prep(test_scaled)$x
+    y_pred_scaled <- predict(model, x_test, verbose = 0)
+    y_pred <- max_min_scale_reverse(y_pred_scaled, test_set)
+    predictions[i] <- y_pred
+  }
+  pred_df <- data.frame('date' = whole_data$date[t_start:Tt] %>% as_date(),
+                       'pred' = predictions,
+                       'actual' = y[t_start:Tt,])
+  pred_df
+}
+
+
+model_prediction(test_data, return, lstm_model_new) -> df
+```
+
+```{r}
+model_eval(, predictions)
 ```
