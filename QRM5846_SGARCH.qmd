@@ -31,8 +31,9 @@ sp_prices <- tq_get("^GSPC",
 #Compute the log returns
 returns <- sp_prices |>
   arrange(date) |>
-  mutate(ret = log(adjusted) - log(lag(adjusted))) |>
-  select(symbol, date, ret) |>
+  mutate(ret = log(adjusted) - log(dplyr::lag(adjusted)), 
+         price = adjusted) |>
+  select(date, price, ret)|>
   drop_na(ret)
 
 data <- returns
@@ -150,6 +151,7 @@ for (d in 0:fore_length) {
             next
         }
     }
+    print(d)
 }
 ```
 
