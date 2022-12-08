@@ -96,7 +96,7 @@ show(roll)
 # Error Metircs
 
 ```{r}
-report(roll, type = "fpm")
+rugarch::report(roll, type = "fpm")
 ```
 
 # Series standard error plot
