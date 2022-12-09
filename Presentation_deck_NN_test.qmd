@@ -19,43 +19,47 @@ format:
     editor: source
 ---
 
-# Reproduce - Understand Article
+```{r setup, include=FALSE, echo=FALSE}
+cache = TRUE
+```
+# Test 
+## Reproduce - Understand Article
 
 ![Design Overview of RNN Model](Images/RNN_reproduce_structure.png)
 
-# Reproduce - Understand Article
+#3 Reproduce - Understand Article
 
-## Data: Stock price of five companies from "2013-01-01" to "2017-12-31"
+### Data: Stock price of five companies from "2013-01-01" to "2017-12-31"
 
 > "In particular, a total of 1259 days of data was collected. The first 1008 data points are for the first 4 years (2013 to 2016) and the last 251 data are for each day in 2017."
 
 \vspace{0.5cm}
 
-## Data Process: Scaling: Min-Max Scale
+### Data Process: Scaling: Min-Max Scale
 
 $$
 x' = \frac{x - min(x)}{max(x) - min(x)}
 $$ We will need to rescale data back after predicting.
 
-# Reproduce - Understand Article
+## Reproduce - Understand Article
 
-## Parameter
+### Parameter
 
 ![](Images/RNN_parameter.png)
 
-## LSTM Cell
+### LSTM Cell
 
 ![](Images/RNN_lstm_cell.png)
 
-## Loss
+### Loss
 
 ![](Images/RNN_loss.png)
 
-# Reproduce - Understand Article
+## Reproduce - Understand Article
 
 ![The Neural Network Loop](Images/RNN_loop.png)
 
-# Reproduce - Data
+## Reproduce - Data
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
 library(tidyquant)
@@ -76,7 +80,7 @@ stock <- nflx_prices |> arrange(date) |>
 head(stock, 5)
 ```
 
-# Reproduce - Train-Test Split and Scale
+## Reproduce - Train-Test Split and Scale
 
 ```{r, echo=TRUE}
 # Max Min Scale
@@ -92,7 +96,7 @@ train_scaled <- train_set %>% max_min_scale
 head(train_scaled, 3)
 ```
 
-# Reproduce - Data Preperation for Fitting
+## Reproduce - Data Preperation for Fitting
 
 ```{r, echo=TRUE}
 data_prep <- function(scaled_data, prediction = 1, lag = 22){
@@ -115,7 +119,7 @@ cat('x_dim: (', dim(x_train), ') || y_dim: (', dim(y_train), ')')
 cat('x dim:', dim(x_train))
 ```
 
-# Reproduce - LSTM Setup
+## Reproduce - LSTM Setup
 
 ```{r, echo=TRUE}
 num_neurons = 50
@@ -134,16 +138,16 @@ get_model <- function(){
 }
 ```
 
-# Reproduce - LSTM Structure
+## Reproduce - LSTM Structure
 
 ```{r, echo=TRUE}
 lstm_model <- get_model()
 summary(lstm_model)
 ```
 
-# Reproduce - LSTM Fitting
+## Reproduce - LSTM Fitting
 
-```{r, echo=TRUE}
+```{r, echo=TRUE, cache=TRUE}
 set_random_seed(1209)
 lstm_model <- get_model()
 lstm_model %>% fit(x = x_train, y = y_train, batch_size = 1,
@@ -160,7 +164,7 @@ df %>% ggplot(aes(x = x, y = y)) +
        x = 'Epoch', y = 'Loss(mse)')
 ```
 
-# Reproduce - LSTM Result
+## Reproduce - LSTM Result
 
 ```{r, echo=TRUE}
 model_prediction <- function(test_len, whole_data, model){
@@ -183,7 +187,7 @@ model_prediction <- function(test_len, whole_data, model){
 }
 ```
 
-# Reproduce - LSTM Result
+## Reproduce - LSTM Result
 
 ```{r, echo=TRUE}
 model_prediction(length(test_set), stock, lstm_model) -> pred_df
@@ -200,11 +204,11 @@ pred_df_long %>% ggplot(aes(x = date, y = price, color = type)) +
   theme(legend.position = 'top')
 ```
 
-# Result Comparison - Article Result
+## Result Comparison - Article Result
 
 ![Comparison of NFLX Monthly Mean](images/RNN_monthly_result.png)
 
-# Result Comparison - Our Result
+## Result Comparison - Our Result
 
 ```{r, fig.width=5, fig.height=3.5}
 pred_df_monthly <- pred_df_long %>% mutate(month = month.abb[month(date)]) %>%
@@ -221,7 +225,7 @@ ggplot(pred_df_monthly, aes(x=month, y=avg_price, fill=type)) +
   theme(legend.position = 'bottom') 
 ```
 
-# Result Comparison - \|% of Error\|
+## Result Comparison - \|% of Error\|
 
 ```{r}
 data.frame('mean'= 2.00, 'std'= 1.54, 'variabce' = 2.38,
@@ -243,7 +247,7 @@ comparison %>% cbind('Our Result' = c(mean(per_err), StdDev(per_err),
                       StdDev(per_err)^2, quantile(per_err), rsq))
 ```
 
-# Model Improving - get S&P 500, set val
+## New Model - Get S&P 500, Set val
 
 ```{r, echo=TRUE}
 sp_prices <- tq_get("^GSPC", get = "stock.prices",
@@ -268,69 +272,97 @@ cat('x_tr_dim: (', dim(x_train_new), ') || y_tr_dim: (', dim(y_train_new), ')\n'
 cat('x_val_dim: (', dim(x_val_new), ') || y_val_dim: (', dim(y_val_new), ')')
 ```
 
-# Model Improving - set new model
-
-```{r, echo=TRUE}
-learning_rate = 0.0001
-# Define LSTM
-get_model_new <- function(){
-  model <- keras_model_sequential() |>
-    layer_lstm(units = 50, batch_input_shape = c(1, 22, 1), 
-               return_sequences = TRUE, stateful = TRUE) |>
-    layer_dropout(rate = 0.5) |>
-    layer_lstm(units = 50) |>
-    layer_dropout(rate = 0.5) |>
-    layer_dense(units = 1)
-  
-  model %>% compile(loss = 'mse', metrics = 'mae',
-    optimizer=optimizer_adam(learning_rate=learning_rate))
-}
-```
-
-# Model Improving - set new model
-
-```{r, echo=TRUE}
-lstm_model_new <- get_model_new()
-summary(lstm_model_new)
-```
-
+## New Model - Fit LSTM
 ```{r}
-validation_data <- list(x_val_new, y_val_new)
-set_random_seed(1209)
-lstm_model_new <- get_model_new()
-lstm_model_new %>% fit(x = x_train_new, y = y_train_new, batch_size = 1,
-    epochs = 15, verbose = 2, shuffle = FALSE, 
-    validation_data = validation_data) -> history_new
-```
-
-```{r}
-set_random_seed(1209)
-lstm_model2 <- get_model()
-lstm_model2 %>% fit(x = x_train_new, y = y_train_new, batch_size = 1,
-    epochs = 15, verbose = 2, shuffle = FALSE, 
-    validation_data = validation_data) -> history2
-```
-
-```{r}
-model_prediction(length(test_data_n), stock, lstm_model) -> pred_df
+return_new <- return %>% column_to_rownames('date')
 
 model_eval <- function(y, pred){
   mse <- mean((pred - y)^2)
   mae <- mean(abs(pred-y))
   rmse <- sqrt(mean(pred-y)^2)
   rsq <- sum((pred-mean(y))^2)/sum((y-mean(y))^2)
-  return(c(mse, mae, rmse, rsq))
+  data.frame('MSE' = mse, 'MAE' = mae, 'RMSE' = rmse, 'Rsq' = rsq)
 }
+```
 
-model_eval(y_test, predict(lstm_model_new, x_test))
+```{r, echo=TRUE, cache=TRUE}
+validation_data <- list(x_val_new, y_val_new)
+set_random_seed(1209)
+lstm_model2 <- get_model()
+lstm_model2 %>% fit(x = x_train_new, y = y_train_new, batch_size = 1,
+    epochs = 5, verbose = 2, shuffle = FALSE, 
+    validation_data = validation_data) -> history2
+
+pred_df2 <- model_prediction(nrow(test_data_n), return_new, lstm_model2)
+head(pred_df2, 3)
+```
+
+## New Model - Loss History
+```{r}
+plot(history2)
+```
+
+## New Model - Prediction
+```{r}
+model_eval(pred_df2$actual, pred_df2$pred)
+```
+
+```{r, fig.width=4, fig.height=2}
+pred_df2_long <- pred_df2 %>% pivot_longer(cols = c(pred, actual), 
+                       names_to = "type", values_to = "price")
+
+pred_df2_long %>% ggplot(aes(x = date, y = price, color = type)) +
+  geom_line() +
+  labs(x = 'Date', y = 'Log Return', color = 'Type') +
+  theme(legend.position = 'top')
+```
+
+```{r, echo=TRUE}
+# learning_rate = 0.0001
+# # Define LSTM
+# get_model_new <- function(){
+#   model <- keras_model_sequential() |>
+#     layer_lstm(units = 50, batch_input_shape = c(1, 22, 1), 
+#                return_sequences = TRUE, stateful = TRUE) |>
+#     layer_dropout(rate = 0.5) |>
+#     layer_lstm(units = 50) |>
+#     layer_dropout(rate = 0.5) |>
+#     layer_dense(units = 1)
+#   
+#   model %>% compile(loss = 'mse', metrics = 'mae',
+#     optimizer=optimizer_adam(learning_rate=learning_rate))
+# }
 ```
 
 ```{r}
+# lstm_model_new <- get_model_new()
+# summary(lstm_model_new)
+```
 
+```{r}
+# set_random_seed(1209)
+# lstm_model_new <- get_model_new()
+# lstm_model_new %>% fit(x = x_train_new, y = y_train_new, batch_size = 1,
+#     epochs = 10, verbose = 2, shuffle = FALSE, 
+#     validation_data = validation_data) -> history_new
+```
+
+```{r}
+# model_prediction(nrow(test_data_n), return_new, lstm_model_new) -> pred_df_new
+# model_eval(pred_df_new$actual, pred_df_new$pred)
+```
+
+```{r}
+# pred_df_new_long <- pred_df_new %>% pivot_longer(cols = c(pred, actual), 
+#                        names_to = "type", values_to = "price")
+# 
+# pred_df_new_long %>% ggplot(aes(x = date, y = price, color = type)) +
+#   geom_line() +
+#   labs(x = 'Date', y = 'Price($)', color = 'Type') +
+#   theme(legend.position = 'top')
 ```
 
 # Model Comparison - ARIMA and LSTM
-
-# Thank Your
+## Thank Your
 
 Any Questions?

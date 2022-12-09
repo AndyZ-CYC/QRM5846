@@ -144,7 +144,7 @@ stock <- sp_prices |>
 ```{r}
 train_set = stock[1:1008,]
 
-# Max Min Scaler
+# Max Min Scale
 max_min_scale <- function(x, name = 'value') {
   df <- data.frame((x- min(x)) /(max(x)-min(x)))
   colnames(df) <- name
@@ -195,8 +195,8 @@ get_model <- function(){
   
   
   model %>% compile(loss = 'mse', 
-                       optimizer = optimizer_adam(learning_rate = learning_rate), 
-                       metrics = 'mae')
+                    optimizer = optimizer_adam(learning_rate = learning_rate), 
+                    metrics = 'mae')
 }
 
 
@@ -419,6 +419,13 @@ model_prediction <- function(test_set, whole_data, model){
 
 model_prediction(test_data, return, lstm_model) -> df
 model_eval(df$actual, df$pred)
+
+plot(df$pred,type = 'l', col = 'red')
+lines(df$actual)
 ```
 
 ## Validation
+
+```{r}
+
+```

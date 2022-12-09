@@ -1,0 +1,163 @@
+---
+title: "Hybrid Arima-sGARCH"
+format: 
+  beamer:
+    navigation: horizontal
+    theme: CambridgeUS
+#    theme: Montpellier
+    colortheme: spruce
+#    colortheme: lily
+    toc: true
+#    theme: ../slides.scss
+    slide-number: true
+    chalkboard: 
+      boardmarker-width: 5
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+    editor: source
+---
+# Data import
+
+```{r include=FALSE, echo=FALSE}
+#Load packages
+library(tidyquant)
+library(fpp3)
+library(rugarch)
+library(rmgarch)
+library(forecast)
+```
+
+```{r message = FALSE, echo=TRUE}
+# Import Data
+sp <- getSymbols(Symbols = "^GSPC", from = "2000-01-01", 
+                 to = "2021-12-13", src = "yahoo", 
+                 adjust=TRUE, auto.assign = FALSE)
+sp_prices <- Ad(sp)
+head(sp_prices)
+
+```
+
+# Return calculation
+```{r echo=TRUE}
+#Compute the log returns
+returns <- CalculateReturns(sp_prices) %>% na.omit()
+data <- returns
+```
+# Return calculation
+```{r}
+plot(returns)
+```
+
+# 'rugarch' package exploration
+- **ugarchspec()**: Method for creating a univariate GARCH specification object prior to fitting.
+- **ugarchfit()**: Method for fitting a variety of univariate GARCH models.
+- **ugarchroll()**: Method for creating rolling density forecast from ARMA-GARCH models with option for refitting every n periods with parallel functionality.
+- **ugarchboot()**: Method for forecasting the GARCH density based on a bootstrap procedures (see details and references).
+- **ugarchforecast()**:Method for forecasting from a variety of univariate GARCH models.
+- **ugarchfilter()**: Method for filtering a variety of univariate GARCH models.
+- **ugarchpath()**: Method for simulating the path of a GARCH model from a variety of univariate GARCH models. 
+
+# Specify sGarch model
+
+```{r echo = TRUE}
+# Specify sGARCH model
+spec <- ugarchspec(
+    variance.model =
+      list(model = "sGARCH",
+           garchOrder = c(1,1)),
+      mean.model =
+      list(armaOrder = c(0,0),
+      include.mean = TRUE),
+    distribution.model = "ged"
+)
+```
+
+We choose the best model from the paper and reproduce it. The best model is hybrid model ARIMA(p,1,q)-SGARCH(1,1)
+with GED distribution (SGARCH.GED 1000), so we define the model = "sGARCH" and define the distribution model as ged.
+
+# Fit Arima-sGARCH Model
+
+```{r echo = TRUE}
+# Fit to the data
+data -> y
+
+sGARCH <- ugarchfit(spec = spec,
+                     data = y,
+                    solver = 'hybrid')
+```
+The solver parameter accepts a string stating which numerical optimizer to use to find the parameter estimates.The “hybrid” strategy solver first tries the “solnp” solver, in failing to converge then tries then “nlminb”, the “gosolnp” and finally the “nloptr” solvers. 
+The out.sample option is provided in order to carry out forecast performance testing against actual data.
+
+# Fit Arima-sGARCH Model
+
+```{r}
+sGARCH
+```
+
+# Fit Arima-sGARCH Model
+
+```{R echo = TRUE}
+# Results information criteria
+infocriteria(sGARCH)
+```
+
+# Residual Diagnostic
+## Standardized residual ACF
+
+```{r}
+# Standardized residuals
+plot(sGARCH, which = 10)
+```
+
+# Residual Diagnostic
+## Standardaied Squared residuals ACF
+```{r}
+# Standardaied Squared residuals
+plot(sGARCH, which = 11)
+```
+
+# Forecast for fitted model
+```{r}
+forec <- ugarchforecast(sGARCH, data, n.ahead = 5)
+forec
+```
+
+It's convenient to use ugarchforecast() for forecast future returns, but it will have look-ahead bias, which it use the information that is not yet available or known. So we use...
+
+# Rolling Forecast for window size 1000
+
+```{r echo = TRUE}
+roll <- ugarchroll(spec = spec, 
+                   data = data,
+                   n.ahead = 1,
+                   n.start = 3000,
+                   refit.every = 50,
+                   refit.window = "moving",
+                   solver = "hybrid",
+                   window.size = 1000,
+                   keep.coef = TRUE)
+```
+
+Refit in moving window where all previous data is used for the first estimation and then moved by a length equal to refit.every
+
+# Rolling Forecast for window size 1000
+
+```{r}
+show(roll)
+```
+
+# Rolling Forecast for window size 1000
+## refit.window
+```{r} 
+# knitr::include_graphics("/Users/penny/Desktop/moving_window.png") 
+```
+Refit in moving window where all previous data is used for the first estimation and then moved by a length equal to refit.every.
+Another refit window is "recursive", which expand the window size including all the previous data.
+
+
+# Error Metircs
+
+```{r echo = TRUE}
+rugarch::report(roll, type = "fpm")
+```
