@@ -29,7 +29,9 @@ format:
 
 A **recurrent neural network** is a class of artificial neural network that uses sequential or time series data. Unlike Feedforward Neural Network, RNN allows the output from some nodes to affect subsequent input to the same nodes by using connections between nodes to create cycles. As a result, the hidden layers produce the outputs with the input information and prior "memory" received from previous learning.
 
-![Rolled RNN and Unrolled RNN](images/unroll-RNN.jpg)
+## Unroll RNN
+
+![Rolled RNN and Unrolled RNN](images/unroll-RNN.png)
 
 ## Recurrent Neural Network(RNN)
 
@@ -78,7 +80,7 @@ Where
 -   $W_f = \text{weight matrix associated with hidden state}$
 -   $b_f = \text{constant}$
 
-After that, a `sigmoid` function is applied over $f_t$ and make it a number between $0$ and $1$. Then $f_t$ is multiplied with the previous cell state. If $f_t=0$, it means the network will forget everything from the previous time stamp while $f_t=1$ represents that the network will remember everything.
+After that, a `sigmoid` function is applied over $f_t$ and make it a number between $0$ and $1$. Then $f_t$ is multiplied with the previous cell state. If $f_t=0$, the network will forget everything from the previous time stamp while $f_t=1$ represents that the network will remember everything.
 
 ## Input Gate and new information
 
