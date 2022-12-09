@@ -311,6 +311,23 @@ lstm_model2 %>% fit(x = x_train_new, y = y_train_new, batch_size = 1,
     validation_data = validation_data) -> history2
 ```
 
+```{r}
+model_prediction(length(test_data_n), stock, lstm_model) -> pred_df
+
+model_eval <- function(y, pred){
+  mse <- mean((pred - y)^2)
+  mae <- mean(abs(pred-y))
+  rmse <- sqrt(mean(pred-y)^2)
+  rsq <- sum((pred-mean(y))^2)/sum((y-mean(y))^2)
+  return(c(mse, mae, rmse, rsq))
+}
+
+model_eval(y_test, predict(lstm_model_new, x_test))
+```
+
+```{r}
+
+```
 
 # Model Comparison - ARIMA and LSTM
 
