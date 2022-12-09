@@ -20,9 +20,10 @@ format:
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
-cache = TRUE
 ```
-# Test 
+
+# Test
+
 ## Reproduce - Understand Article
 
 ![Design Overview of RNN Model](Images/RNN_reproduce_structure.png)
@@ -273,6 +274,7 @@ cat('x_val_dim: (', dim(x_val_new), ') || y_val_dim: (', dim(y_val_new), ')')
 ```
 
 ## New Model - Fit LSTM
+
 ```{r}
 return_new <- return %>% column_to_rownames('date')
 
@@ -298,11 +300,13 @@ head(pred_df2, 3)
 ```
 
 ## New Model - Loss History
+
 ```{r}
 plot(history2)
 ```
 
 ## New Model - Prediction
+
 ```{r}
 model_eval(pred_df2$actual, pred_df2$pred)
 ```
@@ -363,6 +367,7 @@ pred_df2_long %>% ggplot(aes(x = date, y = price, color = type)) +
 ```
 
 # Model Comparison - ARIMA and LSTM
+
 ## Thank Your
 
 Any Questions?

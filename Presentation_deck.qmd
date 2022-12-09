@@ -24,63 +24,270 @@ format:
 
 ```
 
-# Abstract
+# Introduction
 
-## Project Overview
+## Abstract
 
-This project delves into the theoretical framework of two types of models. It aims to compare and contrast the performances of the moving average model and the artificial neural network on the prediction of stock market indices. It compares the performances of two models on indices of different sectors and markets. We used the data collected from Yahoo Finance with daily frequency from 1 January 2000 to 31 December 2019. We use a rolling window approach to compare ARIMA with the hybrid models to determine whether hybrid ARIM-SGARCH can reflect the specific time series characteristics and predict better.
+This project delves into the theoretical framework of two types of models. It aims to compare and contrast the performances of the moving average model and the artificial neural network on the prediction of stock market indices. We used the data collected from Yahoo Finance with daily frequency for the period from 1 January 2000 to 31 December 2021. By using a rolling window approach, we evaluated ARIMA-SGARCH to reflect the specific time-series characteristics and have better predictive power than the simple ARIMA model and Recurrent Neural Network models. In order to assess the precision and quality of these models in forecasting, we compared their equity lines, their forecasting error metrics and their performance metrics. The main contribution of this research is to show that the hybrid ARIMA SGARCH model outperforms the other models over the long term.
+
+## Importance of this topic
+
+The importance of this topic can be condensed to 4 points:
+
+-   **Interest in the area**: attracted attention of researchers, investors, speculators, and governments
+-   **ARIMA hybrid over ARIMA**: financial time series often do not follow ARIMA assumptions
+-   **newest ML techniques to improve models**: We use Recurrent Neural Network(RNN) model to determine if it can reflect the specific time series characteristics and predict better.
+
+# Moving Average Model Methodology and Data
 
 ## Data Analysis
 
-We perform data analysis and a model-fitting procedure for the logarithmic returns of the S&P500 index. We get the data from Yahoo Finance. Given the hybrid ARIMA-GARCH model, we analyze 19 years of data. We transform the adjusted price into a daily logarithmic return.
-
+The first step in the process was cleaning the data. Then, we transformed the adjusted price into a daily logarithmic return, which was calculated according to the following formula: 
 $$
 r_t = ln\frac{P_t}{P_{t-1}}
-$$
+$$ 
+Reasons to choose log returns: - can be added across time periods to create cumulative returns - easy to convert between log return and simple return - log return follows normal distribution
 
-# Moving Average Model
+Advantages to log return having normal distribution: - Distribution only dependent on mean and sd of sample - forecast with higher accuracy (log return) - Stock prices cannot be normal distribution
+
+## Descriptive Statistics - Stock prices
+
+This presents the descriptive statistics of the adjusted closing prices
+
+```{r, out.width = "200px"}
+knitr::include_graphics("images/Descriptive_Statistics.png")
+```
+
+## Descriptive Statistics - Stock prices II
+
+There are a few periods, such as 2008, 2011, 2015, and 2018, that show high volatility of returns. We can expect to build more accurate forecasting models if we are able to mitigate and "smooth" such periods.
+
+```{r, out.width = "200px"}
+knitr::include_graphics("images/PricesPlot.png")
+```
+
+Stock prices of SP 500 are not normally distributed!
+
+## Descriptive Statistics - Log Returns
+
+This presents the descriptive statistics of the adjusted closing prices
+
+```{r, out.width = "200px"}
+knitr::include_graphics("images/LogReturnDescriptive.png")
+```
+
+We use log returns to build models!
+
+## Methodology - ARIMA (p,d,q)
+
+The ARMA process is the combination of the autoregressive model and moving average designed for a stationary time series.
+
+Autoregression (AR) describes a stochastic process, and AR(p) can be denoted as shown below: $$
+  y_{t} = c + \phi_{1}y_{t - 1} + \phi_{2}y_{t - 2} + \cdots + \phi_{p}y_{t - p} + \varepsilon_{t},
+$$ where $\varepsilon_{t}$ is white noise. This is a multiple regression with lagged values of $y_{t}$ as predictors.
+
+The moving average process of order q is denoted as MA(q) and the created time series contains a mean of q lagged white noise variables shifting along the series. $$
+  y_{t} = c + \varepsilon_t + \theta_{1}\varepsilon_{t - 1} + \theta_{2}\varepsilon_{t - 2} + \cdots + \theta_{q}\varepsilon_{t - q},
+$$ where $\varepsilon_{t}$ is white noise. This is a multiple regression with past errors as predictors.
+
+## Methodology - ARIMA (p,d,q)
+
+d is the number of differencing done to the series to achieve stationarity with I (d) so the ARIMA model can be expressed as $$\text{Expand:}\qquad
+  y_t = c + y_{t-1} + \phi_1 y_{t-1}- \phi_1 y_{t-2} + \theta_1\varepsilon_{t-1} + \varepsilon_t
+$$ p is the number of autoregressive terms (AR) d is the number of differencing (I) q is the number of moving average terms (MA)
+
+## Methodology - ARCH(p)
+
+The `ARCH(p)` model is given: $$\sigma_t^2 = \omega + \sum_{i=1}^{p}\alpha_{i}u^2_{t-i}$$
+
+-   Most volatility models derive from this
+-   Returns have a conditional distribution (here assumed to be normal)
+-   ARCH is not a very good model and almost nobody uses it.
+-   The reason is that it needs to use information from many days before $t$ to calculate volatility on day $t$. That is, it needs a lot of lags.
+-   The solution is to write it as an ARMA model.
+-   That is, add one component to the equation, $\beta\sigma_{t-1}$.
+
+## Methodology - GARCH(r,s) and Hybrid ARIMA-SGARCH
+
+The `GARCH(p,q)` model is $$\sigma_t^2 = \omega + \sum_{i=1}^{p}\alpha_{i}u^2_{t-i} + \sum_{j=1}^{q}\beta_{j}\sigma^2_{t-j}$$ Where: $\alpha$ is news. $\beta$ is memory. The size of $(\alpha + \beta)$ determines how quickly the predictability of the process dies out.
+
+This leads us to lastly, ARIMA-SGarch
 
 ## ARIMA SGARCH - Overview
 
-In practice, stock prices can be tremendously volatile during economic growth as well as recessions. In such scenarios, when homoskedasticity presumption is violated, it is said that the errors are heteroskedastic. Given that heteroskedasticity can affect the validity or power of statistical tests when using ARIMA models, we consider the ARCH effect. In this model, the error term of the ARIMA model in this process follows SGARCH(1,1) instead of being assumed constant like the ARIMA model.
+Stock prices can be tremendously volatile during economic growth as well as recessions. When homoskedasticity presumption is violated, it affects the validity or power of statistical tests when using ARIMA models. We consider the SGARCH effect. The error term of the ARIMA model in this process follows SGARCH(1,1) instead of being assumed constant like the ARIMA model.
 
-Firstly, we conducted a rolling forecast based on an ARIMA model with window size(s) equal to 1000. The optimized combination of p and q which has the lowest AIC is used to predict return for the next point. At the end, the vector of forecasted values has the length of 3530 elements, with a starting point at 20 December 2005
+## ARIMA SGARCH - Steps
 
-## ARIMA SGARCH - Overview
+1)  We conduct a rolling forecast based on an ARIMA-SGARCH model with window size(s) equal to 1000.
 
-Next, we describe and review our implementation of dynamic ARIMA(p,1,q)-SGARCH(1,1) models with GED distribution and window size(s) equal to 1000 and where optimized ARIMA(p,1,q) is taken from the first step. Then, we evaluate the results based on error metrics, performance metrics, and equity curves.
+2)  The optimized combination of p and q which has the lowest AIC is used to predict return for the next point. At the end, the vector of forecasted values has the length of 3530 elements
 
-One optimal ARIMA(p,1,q) forecasting model is fitted using a rolling window ap- proach with different combinations of p and q for the values of the input variables. This optimized model which has the lowest value of AIC is used to generate one-day-ahead return. Since the rolling window approach is applied, the next data point is estimated based on the sample size equal to the length of window. The mechanism of this method is illustrated more specifically in the following figure
+3)  We describe and review our implementation of dynamic ARIMA(p,1,q)-SGARCH(1,1) models with GED distribution and window size(s) equal to 1000.
 
-## ARIMA SGARCH - Overview
+4)  we evaluate the results based on error metrics, performance metrics, and equity curves.
 
-![ARIMA mechanism](images/ARIMA-iteration.png)
+## Iteration of the forecasting model ARIMA(p,1,q)-SGARCH(1,1)
 
-## ARIMA SGARCH - Methodology
+```{r, out.width = "300px"}
+knitr::include_graphics("images/ARIMA_iteration.png")
+```
 
-We first fit ARIMA in the following way:
+## Flowchart of the forecasting model ARIMA(p,1,q)-SGARCH(1,1).
 
-![ARIMA_SGARCH methodology](images/ARIMA_SGARCH_methodology.png)
+```{r, out.width = "250px"}
+knitr::include_graphics("images/ARIMA_SGARCH_methodology.png")
+```
 
-Flowchart of the forecasting model ARIMA(p,1,q)-SGARCH(1,1). This flowchart is for models with window size s = 1000.
 
-## Error Metrics
+# Moving Average Model - Coding
 
-In order to evaluate forecast form estimated models, we calculated the following error metrics: Mean absolute error (MAE)
+## Data import
 
-$$
-MAE = \frac{1}{n}\sum_{t=1}^{n}|A_i-F_i|
-$$
+```{r include=FALSE, echo=FALSE}
+#Load packages
+library(tidyquant)
+library(fpp3)
+library(rugarch)
+library(rmgarch)
+library(forecast)
+```
 
-where: n is the number of errors; $A_i$ is the actual value and $F_i$ is the forecasted value computed by the given model.
+```{r message = FALSE, echo=TRUE}
+# Import Data
+sp <- getSymbols(Symbols = "^GSPC", from = "2000-01-01", 
+                 to = "2021-12-13", src = "yahoo", 
+                 adjust=TRUE, auto.assign = FALSE)
+sp_prices <- Ad(sp)
+head(sp_prices)
 
-Mean square error (MSE)
+```
 
-$$
-MSE = \frac{1}{n}\sum_{t=1}^{n}(A_i-F_i)^2
-$$
+## Return calculation
+```{r echo=TRUE}
+#Compute the log returns
+returns <- CalculateReturns(sp_prices) %>% na.omit()
+data <- returns
+```
+## Return calculation
+```{r}
+plot(returns)
+```
 
-# Moving Average Model
+## 'rugarch' package exploration
+- **ugarchspec()**: Method for creating a univariate GARCH specification object prior to fitting.
+- **ugarchfit()**: Method for fitting a variety of univariate GARCH models.
+- **ugarchroll()**: Method for creating rolling density forecast from ARMA-GARCH models with option for refitting every n periods with parallel functionality.
+- **ugarchboot()**: Method for forecasting the GARCH density based on a bootstrap procedures (see details and references).
+- **ugarchforecast()**:Method for forecasting from a variety of univariate GARCH models.
+- **ugarchfilter()**: Method for filtering a variety of univariate GARCH models.
+- **ugarchpath()**: Method for simulating the path of a GARCH model from a variety of univariate GARCH models. 
+
+## Specify sGarch model
+
+```{r echo = TRUE}
+# Specify sGARCH model
+spec <- ugarchspec(
+    variance.model =
+      list(model = "sGARCH",
+           garchOrder = c(1,1)),
+      mean.model =
+      list(armaOrder = c(0,0),
+      include.mean = TRUE),
+    distribution.model = "ged"
+)
+```
+
+We choose the best model from the paper and reproduce it. The best model is hybrid model ARIMA(p,1,q)-SGARCH(1,1)
+with GED distribution (SGARCH.GED 1000), so we define the model = "sGARCH" and define the distribution model as ged.
+
+## Fit Arima-sGARCH Model
+
+```{r echo = TRUE}
+# Fit to the data
+data -> y
+
+sGARCH <- ugarchfit(spec = spec,
+                     data = y,
+                    solver = 'hybrid')
+```
+The solver parameter accepts a string stating which numerical optimizer to use to find the parameter estimates.The “hybrid” strategy solver first tries the “solnp” solver, in failing to converge then tries then “nlminb”, the “gosolnp” and finally the “nloptr” solvers. 
+The out.sample option is provided in order to carry out forecast performance testing against actual data.
+
+## Fit Arima-sGARCH Model
+
+```{r}
+sGARCH
+```
+
+## Fit Arima-sGARCH Model
+
+```{R echo = TRUE}
+# Results information criteria
+infocriteria(sGARCH)
+```
+
+## Residual Diagnostic
+### Standardized residual ACF
+
+```{r}
+# Standardized residuals
+plot(sGARCH, which = 10)
+```
+
+## Residual Diagnostic
+### Standardaied Squared residuals ACF
+```{r}
+# Standardaied Squared residuals
+plot(sGARCH, which = 11)
+```
+
+## Forecast for fitted model
+```{r}
+forec <- ugarchforecast(sGARCH, data, n.ahead = 5)
+forec
+```
+
+It's convenient to use ugarchforecast() for forecast future returns, but it will have look-ahead bias, which it use the information that is not yet available or known. So we use...
+
+## Rolling Forecast for window size 1000
+
+```{r echo = TRUE}
+roll <- ugarchroll(spec = spec, 
+                   data = data,
+                   n.ahead = 1,
+                   n.start = 3000,
+                   refit.every = 50,
+                   refit.window = "moving",
+                   solver = "hybrid",
+                   window.size = 1000,
+                   keep.coef = TRUE)
+```
+
+Refit in moving window where all previous data is used for the first estimation and then moved by a length equal to refit.every
+
+## Rolling Forecast for window size 1000
+
+```{r}
+show(roll)
+```
+
+## Rolling Forecast for window size 1000
+
+### refit.window
+
+![](images/moving_window.png)
+
+Refit in moving window where all previous data is used for the first estimation and then moved by a length equal to refit.every.
+Another refit window is "recursive", which expand the window size including all the previous data.
+
+
+## Error Metircs
+
+```{r echo = TRUE}
+rugarch::report(roll, type = "fpm")
+```
+
 
 
 # RNN-LSTM Model
@@ -196,6 +403,326 @@ The previous steps conclude the architecture of the LSTM. The whole process can 
 
 ![LSTM Chain](images/LSTM-chain.png)
 
+# RNN-LSTM Model - Coding
+
 ## Application in Tensorflow
 
-We implement the LSTM by using the package `tensorflow`. The LSTM model in the `keras` package of `tensorflow` follows our previous description by using the `tanh` function as the activation function and the `sigmoid` function as the recurrent activation function.
+We implement the LSTM by using the package `tensorflow`. The LSTM model in the `keras` package of `tensorflow` follows our previous description by using the `tanh` function as the activation function and the `ReLU` function as the recurrent activation function.
+
+Let's start with Reproduce.
+
+## Reproduce - Understand Article
+
+![Design Overview of RNN Model](Images/RNN_reproduce_structure.png)
+
+## Reproduce - Understand Article
+
+### Data: Stock price of five companies from "2013-01-01" to "2017-12-31"
+
+> "In particular, a total of 1259 days of data was collected. The first 1008 data points are for the first 4 years (2013 to 2016) and the last 251 data are for each day in 2017."
+
+\vspace{0.5cm}
+
+### Data Process: Scaling: Min-Max Scale
+
+$$
+x' = \frac{x - min(x)}{max(x) - min(x)}
+$$ We will need to rescale data back after predicting.
+
+## Reproduce - Understand Article
+
+### Parameter
+
+![](Images/RNN_parameter.png)
+
+### LSTM Cell
+
+![](Images/RNN_lstm_cell.png)
+
+### Loss
+
+![](Images/RNN_loss.png)
+
+## Reproduce - Understand Article
+
+![The Neural Network Loop](Images/RNN_loop.png)
+
+## Reproduce - Data
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
+library(tidyquant)
+library(tidyverse)
+library(tensorflow)
+library(keras)
+```
+
+```{r, echo=TRUE}
+start_date = "2013-01-01"; end_date = "2017-12-31"
+
+nflx_prices <- tq_get("NFLX", get = "stock.prices",
+                 from = start_date, to = end_date)
+
+stock <- nflx_prices |> arrange(date) |>
+  select(date, adjusted) |> column_to_rownames('date')
+
+head(stock, 5)
+```
+
+## Reproduce - Train-Test Split and Scale
+
+```{r, echo=TRUE}
+# Max Min Scale
+max_min_scale <- function(x, name = 'value') {
+  df <- data.frame((x- min(x)) /(max(x)-min(x)))
+  colnames(df) <- name; df}
+max_min_scale_reverse <- function(y, x) {
+  min(x) + y * (max(x)-min(x))}
+
+train_set <- stock[1:1008,]
+test_set <- stock[1009:nrow(stock),]
+train_scaled <- train_set %>% max_min_scale
+head(train_scaled, 3)
+```
+
+## Reproduce - Data Preperation for Fitting
+
+```{r, echo=TRUE}
+data_prep <- function(scaled_data, prediction = 1, lag = 22){
+  x_data <- t(sapply(1:(dim(scaled_data)[1] - lag - prediction + 1),
+                  function(x) scaled_data[x: (x + lag - 1), 1]))
+  x_arr <- array(data = as.numeric(unlist(x_data)), 
+                 dim = c(nrow(x_data), lag, 1))
+  y_data <- t(sapply((1 + lag):(dim(scaled_data)[1] - prediction + 1), 
+                     function(x) scaled_data[x: (x + prediction - 1), 1])) 
+  y_arr <- array(data = as.numeric(unlist(y_data)), 
+                 dim = c(length(y_data), prediction, 1))
+  return(list(x = x_arr, y = y_arr))}
+
+x_train = data_prep(train_scaled)$x
+y_train = data_prep(train_scaled)$y
+cat('x_dim: (', dim(x_train), ') || y_dim: (', dim(y_train), ')')
+```
+
+```{r}
+cat('x dim:', dim(x_train))
+```
+
+## Reproduce - LSTM Setup
+
+```{r, echo=TRUE}
+num_neurons = 50
+learning_rate = 0.002
+# Define LSTM
+get_model <- function(){
+  model <- keras_model_sequential() |>
+    layer_lstm(units = num_neurons, 
+               batch_input_shape = c(1, 22, 1), 
+               activation = 'relu', 
+               stateful = TRUE) |>
+    layer_dense(units = 1) 
+  
+  model %>% compile(loss = 'mse', metrics = 'mae',
+    optimizer=optimizer_adam(learning_rate=learning_rate))
+}
+```
+
+## Reproduce - LSTM Structure
+
+```{r, echo=TRUE}
+lstm_model <- get_model()
+summary(lstm_model)
+```
+
+## Reproduce - LSTM Fitting
+
+```{r, echo=TRUE}
+set_random_seed(1209)
+lstm_model <- get_model()
+lstm_model %>% fit(x = x_train, y = y_train, batch_size = 1,
+    epochs = 15, verbose = 2, shuffle = FALSE) -> history
+```
+
+```{r, fig.width=6, fig.height=2}
+data.frame("x" = seq(1, 15), "y" = history$metrics$loss) -> df
+
+df %>% ggplot(aes(x = x, y = y)) +
+    geom_line(col = '#42a5f5') +
+  geom_point(col = '#2c8fdf') + 
+  labs(title = 'Loss History',
+       x = 'Epoch', y = 'Loss(mse)')
+```
+
+## Reproduce - LSTM Result
+
+```{r, echo=TRUE}
+model_prediction_lstm <- function(test_len, whole_data, model){
+  t <- test_len # test size
+  Tt <- nrow(whole_data) # whole data size
+  t_start <- Tt - t + 1 # test start date
+  predictions <- vector(length = t)
+  for (i in 1:t){
+    n <- t_start - 1 + i
+    test_set = pull(whole_data)[(n-22):n]
+    test_scaled <- test_set %>% max_min_scale
+    x_test = data_prep(test_scaled)$x
+    y_pred_scaled <- stats::predict(model, x_test, verbose = 0)
+    y_pred <- max_min_scale_reverse(y_pred_scaled, test_set)
+    predictions[i] <- y_pred
+  }
+  pred_df <- data.frame('date' = rownames(whole_data)[t_start:Tt] %>% as_date(),
+    'pred' = predictions, 'actual' = pull(whole_data)[t_start:Tt])
+  pred_df
+}
+```
+
+## Reproduce - LSTM Result
+
+```{r, echo=TRUE}
+model_prediction_lstm(length(test_set), stock, lstm_model) -> pred_df
+pred_df %>% head(2)
+```
+
+```{r, fig.width=4, fig.height=2}
+pred_df_long <- pred_df %>% pivot_longer(cols = c(pred, actual), 
+                       names_to = "type", values_to = "price")
+
+pred_df_long %>% ggplot(aes(x = date, y = price, color = type)) +
+  geom_line() +
+  labs(x = 'Date', y = 'Price($)', color = 'Type') +
+  theme(legend.position = 'top')
+```
+
+## Result Comparison - Article Result
+
+![Comparison of NFLX Monthly Mean](images/RNN_monthly_result.png)
+
+## Result Comparison - Our Result
+
+```{r, fig.width=5, fig.height=3.5}
+pred_df_monthly <- pred_df_long %>% mutate(month = month.abb[month(date)]) %>%
+  group_by(month, type) %>% summarise(avg_price = mean(price), .groups = 'drop')
+
+pred_df_monthly$month <- factor(pred_df_monthly$month, levels = month.abb)
+
+ggplot(pred_df_monthly, aes(x=month, y=avg_price, fill=type)) +
+  geom_bar(stat = "identity", position="dodge", width = 0.65) +
+  scale_fill_manual(values = c("actual" = '#393b79', 'pred' = '#de9ed6')) +
+  labs(title = 'Comparison of NFLX Monthly Mean, 2017',
+       y = 'Adjusted Price', x = 'Date', fill = '') +
+  theme_classic() +
+  theme(legend.position = 'bottom') 
+```
+
+## Result Comparison - \|% of Error\|
+
+```{r}
+data.frame('mean'= 2.00, 'std'= 1.54, 'variabce' = 2.38,
+           'min' = 0.00, '25_percentile' = 0.80, '50_percentile' = 1.65, 
+           '75_percentile' = 2.96, 'max' = 9.25, 'R_squared' = 0.9589) %>% 
+  pivot_longer(cols = c(mean:R_squared), names_to = '|% of Error|', 
+               values_to = 'Article') -> comparison
+
+pred = pred_df$pred
+y = pred_df$actual
+rsq <- sum((pred_df$pred-mean(y))^2)/sum((y-mean(y))^2)
+
+per_err <- pred_df %>% mutate(percent_err = abs(pred-actual)/actual * 100) %>% 
+  pull(percent_err)
+```
+
+```{r,echo=TRUE}
+comparison %>% cbind('Our Result' = c(mean(per_err), StdDev(per_err),
+                      StdDev(per_err)^2, quantile(per_err), rsq))
+```
+
+## New Model - Get S&P 500, Set val
+
+```{r, echo=TRUE}
+sp_prices <- tq_get("^GSPC", get = "stock.prices",
+                 from = "2000-01-01", to = "2021-12-31")
+return <- sp_prices |> arrange(date) |>
+  mutate(return = log(adjusted) - log(lag(adjusted))) |>
+  drop_na(return) %>% select(date, return)
+# scale
+return$return <- max_min_scale(return$return) %>% pull(value)
+# train test split
+val_date <- "2019-01-01"; test_date <- '2020-01-01'
+train_data_n <- return |> filter(date <= val_date) %>% column_to_rownames('date')
+val_data_n <- return |> filter(date < test_date & date > val_date) %>% column_to_rownames('date')
+test_data_n <- return |> filter(date >= test_date) %>% column_to_rownames('date')
+# data preparation
+x_train_new = data_prep(train_data_n)$x; y_train_new = data_prep(train_data_n)$y
+x_val_new = data_prep(val_data_n)$x; y_val_new = data_prep(val_data_n)$y
+```
+
+```{r}
+cat('x_tr_dim: (', dim(x_train_new), ') || y_tr_dim: (', dim(y_train_new), ')\n')
+cat('x_val_dim: (', dim(x_val_new), ') || y_val_dim: (', dim(y_val_new), ')')
+```
+
+## New Model - Fit LSTM
+
+```{r}
+return_new <- return %>% column_to_rownames('date')
+
+model_eval <- function(y, pred){
+  mse <- mean((pred - y)^2)
+  mae <- mean(abs(pred-y))
+  rmse <- sqrt(mean(pred-y)^2)
+  rsq <- sum((pred-mean(y))^2)/sum((y-mean(y))^2)
+  data.frame('MSE' = mse, 'MAE' = mae, 'RMSE' = rmse, 'Rsq' = rsq)
+}
+```
+
+```{r, echo=TRUE}
+validation_data <- list(x_val_new, y_val_new)
+set_random_seed(1209)
+lstm_model2 <- get_model()
+lstm_model2 %>% fit(x = x_train_new, y = y_train_new, batch_size = 1,
+    epochs = 5, verbose = 2, shuffle = FALSE, 
+    validation_data = validation_data) -> history2
+
+pred_df2 <- model_prediction_lstm(nrow(test_data_n), return_new, lstm_model2)
+head(pred_df2, 3)
+```
+
+## New Model - Loss History
+
+```{r}
+plot(history2)
+```
+
+## New Model - Prediction
+
+```{r}
+model_eval(pred_df2$actual, pred_df2$pred) -> eval_lstm
+eval_lstm
+```
+
+```{r, fig.width=4, fig.height=2}
+pred_df2_long <- pred_df2 %>% pivot_longer(cols = c(pred, actual), 
+                       names_to = "type", values_to = "price")
+
+pred_df2_long %>% ggplot(aes(x = date, y = price, color = type)) +
+  geom_line() +
+  labs(x = 'Date', y = 'Log Return', color = 'Type') +
+  theme(legend.position = 'top')
+```
+
+# Model Comparison - ARIMA and LSTM
+
+## Error Metrics
+
+```{r}
+data.frame('MSE'= 0.0001065, 'MAE'= 0.0065320) %>% 
+  pivot_longer(cols = c(MSE:MAE), names_to = 'Error Metrics', 
+               values_to = 'sGARCH') -> comparison2
+
+comparison2 %>% cbind('RNN_LSTM' = c(eval_lstm$MSE, eval_lstm$MAE))
+```
+
+
+## Thank Your
+
+Any Questions?
+
