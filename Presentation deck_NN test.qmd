@@ -31,22 +31,24 @@ format:
 
 \vspace{0.5cm}
 
-## Data Process: Scaling: Min-Max Scale 
+## Data Process: Scaling: Min-Max Scale
 
 $$
 x' = \frac{x - min(x)}{max(x) - min(x)}
-$$
-We will need to rescale data back after predicting.
+$$ We will need to rescale data back after predicting.
 
 # Reproduce - Understand Article
 
 ## Parameter
+
 ![](Images/RNN_parameter.png)
 
 ## LSTM Cell
+
 ![](Images/RNN_lstm_cell.png)
 
 ## Loss
+
 ![](Images/RNN_loss.png)
 
 # Reproduce - Understand Article
@@ -78,6 +80,7 @@ head(stock, 5)
 ```
 
 # Reproduce - Train-Test Split and Scale
+
 ```{r, echo=TRUE}
 # Max Min Scale
 max_min_scale <- function(x, name = 'value') {
@@ -88,11 +91,13 @@ max_min_scale_reverse <- function(y, x) {
   min(x) + y * (max(x)-min(x))}
 
 train_set <- stock[1:1008,]
+test_set <- stock[1009:nrow(stock),]
 train_scaled <- train_set %>% max_min_scale
 head(train_scaled, 3)
 ```
 
 # Reproduce - Data Preperation for Fitting
+
 ```{r, echo=TRUE}
 # data preparation
 data_prep <- function(scaled_data, prediction = 1, lag = 22){
@@ -113,6 +118,7 @@ dim(x_train); dim(y_train)
 ```
 
 # Reproduce - LSTM Setup
+
 ```{r, echo=TRUE}
 num_neurons = 50
 learning_rate = 0.002
@@ -132,12 +138,14 @@ get_model <- function(){
 ```
 
 # Reproduce - LSTM Structure
+
 ```{r, echo=TRUE}
 lstm_model <- get_model()
 summary(lstm_model)
 ```
 
 # Reproduce - LSTM Fitting
+
 ```{r, echo=TRUE}
 set_random_seed(1209)
 lstm_model <- get_model()
@@ -148,6 +156,7 @@ plot(history)
 ```
 
 # Reproduce - LSTM Result
+
 ```{r}
 model_prediction <- function(test_set, whole_data, model){
   t <- nrow(test_set)
@@ -170,7 +179,6 @@ model_prediction <- function(test_set, whole_data, model){
   pred_df
 }
 ```
-
 
 # Result Comparison
 
