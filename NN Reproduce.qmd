@@ -315,12 +315,32 @@ return$return <- max_min_scale(return$return) %>% pull(value)
 
 # train test split
 split_date <- "2019-05-17"
-return |> filter(date < split_date) %>% select(return) -> train_data
-return |> filter(date >= split_date) %>% select(return) -> test_data
+return |> filter(date < split_date) %>% 
+  column_to_rownames('date') -> train_data
+return |> filter(date >= split_date) %>% 
+  column_to_rownames('date')-> test_data
 
 # data preparation
 x_train_new = data_prep(train_data)$x
 y_train_new = data_prep(train_data)$y
+
+dim(x_train_new)
+dim(y_train_new)
+```
+
+```{r}
+set_random_seed(1209)
+lstm_model <- get_model()
+lstm_model %>% fit(
+    x = x_train_new,
+    y = y_train_new,
+    batch_size = 1,
+    epochs = 15,
+    verbose = 2,
+    shuffle = FALSE
+) -> history
+
+plot(history)
 ```
 
 ```{r}
@@ -349,7 +369,7 @@ lstm_model_new %>% fit(
     x = x_train,
     y = y_train,
     batch_size = 1,
-    epochs = 10,
+    epochs = 15,
     verbose = 2,
     shuffle = FALSE
 ) -> history
@@ -367,38 +387,38 @@ model_eval <- function(y, pred){
   return(c(mse, mae, rmse, rsq))
 }
 
-model_eval(y_test, keras::predict(lstm_model, x_test))
+model_eval(y_test, predict(lstm_model_new, x_test))
 ```
 
 ```{r}
+#return %>% column_to_rownames('date') -> return
+
 model_prediction <- function(test_set, whole_data, model){
-  # test_set should only have one olumn of predict variable
-  # whole_data should have one column 'date' and predict variable
   t <- nrow(test_set)
   Tt <- nrow(whole_data)
   t_start <- Tt - t + 1
-  y <- whole_data %>% select(-date)
   predictions <- vector(length = t)
   
   for (i in 1:t){
     n <- t_start - 1 + i
-    test_set = whole_data[(n-22):n,]
+    test_set = pull(whole_data)[(n-22):n]
     test_scaled <- test_set %>% max_min_scale
     x_test = data_prep(test_scaled)$x
     y_pred_scaled <- predict(model, x_test, verbose = 0)
     y_pred <- max_min_scale_reverse(y_pred_scaled, test_set)
     predictions[i] <- y_pred
   }
-  pred_df <- data.frame('date' = whole_data$date[t_start:Tt] %>% as_date(),
+  pred_df <- data.frame('date' = rownames(whole_data)[t_start:Tt] %>% as_date(),
                        'pred' = predictions,
-                       'actual' = y[t_start:Tt,])
+                       'actual' = pull(whole_data)[t_start:Tt])
   pred_df
 }
-
-
-model_prediction(test_data, return, lstm_model_new) -> df
 ```
 
 ```{r}
-model_eval(, predictions)
+
+model_prediction(test_data, return, lstm_model) -> df
+model_eval(df$actual, df$pred)
 ```
+
+## Validation

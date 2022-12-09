@@ -1,0 +1,187 @@
+---
+title: "Presentation deck_NN test"
+editor: visual
+format: 
+  beamer:
+    navigation: horizontal
+    theme: CambridgeUS
+#    theme: Montpellier
+    colortheme: spruce
+#    colortheme: lily
+    #toc: true
+#    theme: ../slides.scss
+    slide-number: true
+    chalkboard: 
+      boardmarker-width: 5
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+    editor: source
+---
+
+# Reproduce - Understand Article
+
+![Design Overview of RNN Model](Images/RNN_reproduce_structure.png)
+
+# Reproduce - Understand Article
+
+## Data: Stock price of five companies from "2013-01-01" to "2017-12-31"
+
+> "In particular, a total of 1259 days of data was collected. The first 1008 data points are for the first 4 years (2013 to 2016) and the last 251 data are for each day in 2017."
+
+\vspace{0.5cm}
+
+## Data Process: Scaling: Min-Max Scale 
+
+$$
+x' = \frac{x - min(x)}{max(x) - min(x)}
+$$
+We will need to rescale data back after predicting.
+
+# Reproduce - Understand Article
+
+## Parameter
+![](Images/RNN_parameter.png)
+
+## LSTM Cell
+![](Images/RNN_lstm_cell.png)
+
+## Loss
+![](Images/RNN_loss.png)
+
+# Reproduce - Understand Article
+
+![The Neural Network Loop](Images/RNN_loop.png)
+
+# Reproduce - Data
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
+#| warning: false
+library(tidyquant)
+library(tidyverse)
+library(tensorflow)
+library(keras)
+# install_keras()
+# install_tensorflow(version = "nightly")
+```
+
+```{r, echo=TRUE}
+start_date = "2013-01-01"; end_date = "2017-12-31"
+
+sp_prices <- tq_get("NFLX", get = "stock.prices",
+                 from = start_date, to = end_date)
+
+stock <- sp_prices |> arrange(date) |>
+  select(date, adjusted) |> column_to_rownames('date')
+
+head(stock, 5)
+```
+
+# Reproduce - Train-Test Split and Scale
+```{r, echo=TRUE}
+# Max Min Scale
+max_min_scale <- function(x, name = 'value') {
+  df <- data.frame((x- min(x)) /(max(x)-min(x)))
+  colnames(df) <- name; df}
+
+max_min_scale_reverse <- function(y, x) {
+  min(x) + y * (max(x)-min(x))}
+
+train_set <- stock[1:1008,]
+train_scaled <- train_set %>% max_min_scale
+head(train_scaled, 3)
+```
+
+# Reproduce - Data Preperation for Fitting
+```{r, echo=TRUE}
+# data preparation
+data_prep <- function(scaled_data, prediction = 1, lag = 22){
+  x_data <- t(sapply(1:(dim(scaled_data)[1] - lag - prediction + 1),
+                  function(x) scaled_data[x: (x + lag - 1), 1]))
+  x_arr <- array(data = as.numeric(unlist(x_data)), 
+                 dim = c(nrow(x_data), lag, 1))
+  y_data <- t(sapply((1 + lag):(dim(scaled_data)[1] - prediction + 1), 
+                     function(x) scaled_data[x: (x + prediction - 1), 1])) 
+  y_arr <- array(data = as.numeric(unlist(y_data)), 
+                 dim = c(length(y_data), prediction, 1))
+  return(list(x = x_arr, y = y_arr))
+}
+x_train = data_prep(train_scaled)$x
+y_train = data_prep(train_scaled)$y
+
+dim(x_train); dim(y_train)
+```
+
+# Reproduce - LSTM Setup
+```{r, echo=TRUE}
+num_neurons = 50
+learning_rate = 0.002
+
+# Define LSTM
+get_model <- function(){
+  model <- keras_model_sequential() |>
+    layer_lstm(units = num_neurons, 
+               batch_input_shape = c(1, 22, 1), 
+               activation = 'relu', 
+               stateful = TRUE) |>
+    layer_dense(units = 1) 
+  
+  model %>% compile(loss = 'mse', metrics = 'mae',
+    optimizer = optimizer_adam(learning_rate = learning_rate))
+}
+```
+
+# Reproduce - LSTM Structure
+```{r, echo=TRUE}
+lstm_model <- get_model()
+summary(lstm_model)
+```
+
+# Reproduce - LSTM Fitting
+```{r, echo=TRUE}
+set_random_seed(1209)
+lstm_model <- get_model()
+lstm_model %>% fit(x = x_train, y = y_train, batch_size = 1,
+    epochs = 15, verbose = 2, shuffle = FALSE) -> history
+
+plot(history)
+```
+
+# Reproduce - LSTM Result
+```{r}
+model_prediction <- function(test_set, whole_data, model){
+  t <- nrow(test_set)
+  Tt <- nrow(whole_data)
+  t_start <- Tt - t + 1
+  predictions <- vector(length = t)
+  
+  for (i in 1:t){
+    n <- t_start - 1 + i
+    test_set = pull(whole_data)[(n-22):n]
+    test_scaled <- test_set %>% max_min_scale
+    x_test = data_prep(test_scaled)$x
+    y_pred_scaled <- predict(model, x_test, verbose = 0)
+    y_pred <- max_min_scale_reverse(y_pred_scaled, test_set)
+    predictions[i] <- y_pred
+  }
+  pred_df <- data.frame('date' = rownames(whole_data)[t_start:Tt] %>% as_date(),
+                       'pred' = predictions,
+                       'actual' = pull(whole_data)[t_start:Tt])
+  pred_df
+}
+```
+
+
+# Result Comparison
+
+# Model Improving
+
+# Other Attempt - Variance Model
+
+# Other Attempt Movement Model
+
+# Model Comparison - ARIMA and LSTM
+
+# Thank Your
+
+Any Questions?
