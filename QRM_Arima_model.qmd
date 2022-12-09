@@ -8,13 +8,12 @@ editor: visual
 ```
 
 # Abstract
+
 This project delves into the theoretical framework of two types of models. It aims to compare and contrast the performances of the moving average model and the artificial neural network on the prediction of stock market indices. It also aims to compare how the abnormal data influence two models(pandemic, financial crisis, etc.) It compares the performances of two models on indices of different sectors and markets. We used the data collected from Yahoo Finance with daily frequency from 1 January 2000 to 31 December 2019. We use a rolling window approach to compare ARIMA with the hybrid models to determine whether hybrid ARIM-SGARCH can reflect the specific time series characteristics and predict better. 
 
 # 1. Data Analysis
 
 We perform data analysis and a model-fitting procedure for the logarithmic returns of the S&P500 index. We get the data from Yahoo Finance. Given the hybrid ARIMA-GARCH model, we analyze 19 years of data. We transform the adjusted price into a daily logarithmic return, 
-
-
 
 $$
 r_t = ln\frac{P_t}{P_{t-1}}
@@ -32,11 +31,12 @@ $$
  One optimal ARIMA(p,1,q) forecasting model is fitted using a rolling window ap- proach with different combinations of p and q for the values of the input variables. This optimized model which has the lowest value of AIC is used to generate one-day-ahead return. Since the rolling window approach is applied, the next data point is estimated based on the sample size equal to the length of window. The mechanism of this method is illustrated more specifically in the following figure
  
 ![ARIMA mechanism](images/ARIMA - iteration.png)
+
 ## ARIMA SGARCH - Methodology
 
 We first fit ARIMA in the following way:
 
-![ARIMA_SGARCH methodology](images/ARIMA_SGARCH methodology.png)
+![ARIMA_SGARCH methodology](images/ARIMA_SGARCH_methodology.png)
 
 Flowchart of the forecasting model ARIMA(p,1,q)-SGARCH(1,1). This flowchart is for
 models with window size s = 1000.  
@@ -48,14 +48,12 @@ Mean absolute error (MAE)
 
 $$
 MAE = \frac{1}{n}\sum_{t=1}^{n}|A_i-F_i|
-
 $$
 where: n is the number of errors; $A_i$ is the actual value and $F_i$ is the forecasted value computed by the given model.
 
 Mean square error (MSE)
 $$
 MSE = \frac{1}{n}\sum_{t=1}^{n}(A_i-F_i)^2
-
 $$
 
 ## Results
@@ -152,7 +150,7 @@ show(roll)
 # Error Metircs
 
 ```{r}
-report(roll, type = "fpm")
+rugarch::report(roll, type = "fpm")
 ```
 
 # Series standard error plot
