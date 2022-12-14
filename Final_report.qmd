@@ -1,0 +1,24 @@
+---
+title: "Performances of the Moving Average Model and the Artificial Neural Network on the Forecast of Stock Market Indices"
+author: "Peilin Jing, Jiachen Liu, Yaoyuan Zhang, Rashi Lodhi"
+format: pdf
+editor: visual
+---
+
+## Abstract
+
+## 1. Introduction
+
+## 2. Literature Review
+
+## 3. Methodology and Data
+
+### 3.1 Data Analysis
+
+### 3.2 Methodology
+
+## 4. Results
+
+## 5. Conclusions
+
+## References
