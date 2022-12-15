@@ -21,11 +21,11 @@ editor: visual
 
 #### Recurrent Neural Network(RNN)
 
-A **recurrent neural network** is a class of artificial neural network that uses sequential or time series data. Unlike Feedforward Neural Network, RNN allows the output from some nodes to affect subsequent input to the same nodes by using connections between nodes to create cycles. As a result, the hidden layers produce the outputs with the input information and prior "memory" received from previous learning.
+A **recurrent neural network** is a class of artificial neural network that uses sequential or time series data \[1\]. Unlike Feedforward Neural Network, RNN allows the output from some nodes to affect subsequent input to the same nodes by using connections between nodes to create cycles. As a result, the hidden layers produce the outputs with the input information and prior "memory" received from previous learning.
 
 #### Unroll RNN
 
-![Figure 6. Rolled RNN and Unrolled RNN](images/unroll-RNN.png)
+![Figure 6. Rolled RNN and Unrolled RNN \[1\]](images/unroll-RNN.png)
 
 #### Recurrent Neural Network(RNN)
 
@@ -57,9 +57,9 @@ $$
 
 #### Long Short-term Memory (LSTM)
 
-Long short-term memory network, usually known as LSTM, is a specific RNN architecture first introduced by Sepp Hochreiter and Juergen Schmidhuber as a solution to vanishing gradient problem. Recall with an RNN, similar with human reading a book and remembering what happened in the earlier chapter, it remembers the previous information and use it for processing the current input. The shortcoming of the NN is that it is not able to remember long term dependencies due to the vanishing gradient. The LSTM is designed to alleviate and avoid such issues.
+Long short-term memory network, usually known as LSTM, is a specific RNN architecture first introduced by Sepp Hochreiter and Juergen Schmidhuber as a solution to vanishing gradient problem \[2\]. Recall with an RNN, similar with human reading a book and remembering what happened in the earlier chapter, it remembers the previous information and use it for processing the current input. The shortcoming of the NN is that it is not able to remember long term dependencies due to the vanishing gradient. The LSTM is designed to alleviate and avoid such issues.
 
-The LSTM consists of three parts:
+The LSTM consists of three parts \[5\]:
 
 -   **Forget Gate**: Choose whether the information coming from the previous time stamp should be remembered or can be forgotten
 -   **Input Gate**: Learn new information from the input to this cell
@@ -128,7 +128,7 @@ $$
 
 The previous steps conclude the architecture of the LSTM. The whole process can be summarized and displayed as the following:
 
-![Figure 7. LSTM Chain](images/LSTM-chain.png)
+![Figure 7. LSTM Chain \[4\]](images/LSTM-chain.png)
 
 # 4. Results
 
@@ -346,3 +346,13 @@ Compared these the error metrics for these three models with different window si
 # 5. Conclusions
 
 # References
+
+\[1\] IBM Cloud Education, "Recurrent Neural Network." IBM. September 14, 2020. [https://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gmhttps://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gm](https://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gmhttps://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gm){.uri}
+
+\[2\] Hochreiter, Sepp and Schmidhuber, Jürgen, "Long Short-Term Memory." Neural Computation. 1997. <http://dx.doi.org/10.1162/neco.1997.9.8.1735>
+
+\[3\] Jahan, Israt, "Stock Price Prediction Using Recurrent Neural Networks." North Dakota State University. June, 2018. <https://hdl.handle.net/10365/28797>
+
+\[4\] Saxena, Shipra, "Introduction to Long Short Term Memory(LSTM)." Analytics Vidhya. March 16, 2022. <https://www.analyticsvidhya.com/blog/2021/03/introduction-to-long-short-term-memory-lstm/>
+
+\[5\] Olah, Christopher, "Understanding LSTM Networks." colah's blog. August 27, 2015. <https://colah.github.io/posts/2015-08-Understanding-LSTMs/>
