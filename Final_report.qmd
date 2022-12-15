@@ -129,7 +129,7 @@ A **recurrent neural network** is a class of artificial neural network that uses
 
 #### Unroll RNN
 
-![Rolled RNN and Unrolled RNN \[1\]](images/unroll-RNN.png)
+![Figure 6. Rolled RNN and Unrolled RNN \[1\]](images/unroll-RNN.png)
 
 #### Recurrent Neural Network(RNN)
 
@@ -232,7 +232,7 @@ $$
 
 The previous steps conclude the architecture of the LSTM. The whole process can be summarized and displayed as the following:
 
-![LSTM Chain \[4\]](images/LSTM-chain.png)
+![Figure 7. LSTM Chain \[4\]](images/LSTM-chain.png)
 
 # 4. Results
 
