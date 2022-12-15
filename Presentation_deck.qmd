@@ -42,11 +42,9 @@ The importance of this topic can be condensed to 4 points:
 
 ## Data Analysis
 
-The first step in the process was cleaning the data. Then, we transformed the adjusted price into a daily logarithmic return, which was calculated according to the following formula: 
-$$
+The first step in the process was cleaning the data. Then, we transformed the adjusted price into a daily logarithmic return, which was calculated according to the following formula: $$
 r_t = ln\frac{P_t}{P_{t-1}}
-$$ 
-Reasons to choose log returns: - can be added across time periods to create cumulative returns - easy to convert between log return and simple return - log return follows normal distribution
+$$ Reasons to choose log returns: - can be added across time periods to create cumulative returns - easy to convert between log return and simple return - log return follows normal distribution
 
 Advantages to log return having normal distribution: - Distribution only dependent on mean and sd of sample - forecast with higher accuracy (log return) - Stock prices cannot be normal distribution
 
@@ -139,7 +137,6 @@ knitr::include_graphics("images/ARIMA_iteration.png")
 knitr::include_graphics("images/ARIMA_SGARCH_methodology.png")
 ```
 
-
 # Moving Average Model - Coding
 
 ## Data import
@@ -164,24 +161,28 @@ head(sp_prices)
 ```
 
 ## Return calculation
+
 ```{r echo=TRUE}
 #Compute the log returns
 returns <- CalculateReturns(sp_prices) %>% na.omit()
 data <- returns
 ```
+
 ## Return calculation
+
 ```{r}
 plot(returns)
 ```
 
 ## 'rugarch' package exploration
-- **ugarchspec()**: Method for creating a univariate GARCH specification object prior to fitting.
-- **ugarchfit()**: Method for fitting a variety of univariate GARCH models.
-- **ugarchroll()**: Method for creating rolling density forecast from ARMA-GARCH models with option for refitting every n periods with parallel functionality.
-- **ugarchboot()**: Method for forecasting the GARCH density based on a bootstrap procedures (see details and references).
-- **ugarchforecast()**:Method for forecasting from a variety of univariate GARCH models.
-- **ugarchfilter()**: Method for filtering a variety of univariate GARCH models.
-- **ugarchpath()**: Method for simulating the path of a GARCH model from a variety of univariate GARCH models. 
+
+-   **ugarchspec()**: Method for creating a univariate GARCH specification object prior to fitting.
+-   **ugarchfit()**: Method for fitting a variety of univariate GARCH models.
+-   **ugarchroll()**: Method for creating rolling density forecast from ARMA-GARCH models with option for refitting every n periods with parallel functionality.
+-   **ugarchboot()**: Method for forecasting the GARCH density based on a bootstrap procedures (see details and references).
+-   **ugarchforecast()**:Method for forecasting from a variety of univariate GARCH models.
+-   **ugarchfilter()**: Method for filtering a variety of univariate GARCH models.
+-   **ugarchpath()**: Method for simulating the path of a GARCH model from a variety of univariate GARCH models.
 
 ## Specify sGarch model
 
@@ -198,8 +199,7 @@ spec <- ugarchspec(
 )
 ```
 
-We choose the best model from the paper and reproduce it. The best model is hybrid model ARIMA(p,1,q)-SGARCH(1,1)
-with GED distribution (SGARCH.GED 1000), so we define the model = "sGARCH" and define the distribution model as ged.
+We choose the best model from the paper and reproduce it. The best model is hybrid model ARIMA(p,1,q)-SGARCH(1,1) with GED distribution (SGARCH.GED 1000), so we define the model = "sGARCH" and define the distribution model as ged.
 
 ## Fit Arima-sGARCH Model
 
@@ -211,8 +211,8 @@ sGARCH <- ugarchfit(spec = spec,
                      data = y,
                     solver = 'hybrid')
 ```
-The solver parameter accepts a string stating which numerical optimizer to use to find the parameter estimates.The “hybrid” strategy solver first tries the “solnp” solver, in failing to converge then tries then “nlminb”, the “gosolnp” and finally the “nloptr” solvers. 
-The out.sample option is provided in order to carry out forecast performance testing against actual data.
+
+The solver parameter accepts a string stating which numerical optimizer to use to find the parameter estimates.The "hybrid" strategy solver first tries the "solnp" solver, in failing to converge then tries then "nlminb", the "gosolnp" and finally the "nloptr" solvers. The out.sample option is provided in order to carry out forecast performance testing against actual data.
 
 ## Fit Arima-sGARCH Model
 
@@ -228,6 +228,7 @@ infocriteria(sGARCH)
 ```
 
 ## Residual Diagnostic
+
 ### Standardized residual ACF
 
 ```{r}
@@ -236,13 +237,16 @@ plot(sGARCH, which = 10)
 ```
 
 ## Residual Diagnostic
+
 ### Standardaied Squared residuals ACF
+
 ```{r}
 # Standardaied Squared residuals
 plot(sGARCH, which = 11)
 ```
 
 ## Forecast for fitted model
+
 ```{r}
 forec <- ugarchforecast(sGARCH, data, n.ahead = 5)
 forec
@@ -278,17 +282,13 @@ show(roll)
 
 ![](images/moving_window.png)
 
-Refit in moving window where all previous data is used for the first estimation and then moved by a length equal to refit.every.
-Another refit window is "recursive", which expand the window size including all the previous data.
-
+Refit in moving window where all previous data is used for the first estimation and then moved by a length equal to refit.every. Another refit window is "recursive", which expand the window size including all the previous data.
 
 ## Error Metircs
 
 ```{r echo = TRUE}
 rugarch::report(roll, type = "fpm")
 ```
-
-
 
 # RNN-LSTM Model
 
@@ -721,8 +721,6 @@ data.frame('MSE'= 0.0001065, 'MAE'= 0.0065320) %>%
 comparison2 %>% cbind('RNN_LSTM' = c(eval_lstm$MSE, eval_lstm$MAE))
 ```
 
-
 ## Thank Your
 
 Any Questions?
-
