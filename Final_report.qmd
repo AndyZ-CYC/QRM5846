@@ -132,6 +132,217 @@ The previous steps conclude the architecture of the LSTM. The whole process can 
 
 # 4. Results
 
+## 4.1 Model: Arima-SGARCH
+
+```{r message = FALSE, include=FALSE, echo=FALSE}
+#Load packages
+library(tidyquant)
+library(fpp3)
+library(rugarch)
+library(rmgarch)
+library(forecast)
+```
+
+```{r message = FALSE, include = FALSE, echo=FALSE}
+# Import Data
+sp <- getSymbols(Symbols = "^GSPC", from = "2000-01-01", 
+                 to = "2021-12-13", src = "yahoo", 
+                 adjust=TRUE, auto.assign = FALSE)
+sp_prices <- Ad(sp)
+head(sp_prices)
+
+```
+
+```{r include = FALSE, echo=FALSE}
+#Compute the log returns
+returns <- CalculateReturns(sp_prices) %>% na.omit()
+data <- returns
+```
+
+```{r message = FALSE,include = FALSE, echo=FALSE}
+plot(returns)
+```
+
+In the paper, it had several different models, including SGARCH, EGARCH and Arima, etc. In the best model Arima-SGARCH, it tested for different window size and ,distribution model, and made the conclusion that hybrid Arima(p,1,q)- SGARCH(1,1) with w=1000 is the best model with best window size and distribution model according to the error metrics. In this section, we used 'rugarch' package to fit the hybrid Arima-GARCH model, compare the hybrid model, and do rolling forecast. so first, we will introduce a little bit about this package.
+
+### 'rugarch' package exploration
+
+-   **ugarchspec()**: Method for creating a univariate GARCH specification object prior to fitting.
+-   **ugarchfit()**: Method for fitting a variety of univariate GARCH models.
+-   **ugarchroll()**: Method for creating rolling density forecast from ARMA-GARCH models with option for refitting every n periods with parallel functionality.
+-   **ugarchboot()**: Method for forecasting the GARCH density based on a bootstrap procedures (see details and references).
+-   **ugarchforecast()**:Method for forecasting from a variety of univariate GARCH models.
+-   **ugarchfilter()**: Method for filtering a variety of univariate GARCH models.
+-   **ugarchpath()**: Method for simulating the path of a GARCH model from a variety of univariate GARCH models.
+
+We used the ugarchspec() to define our model, and ugarchfit() to fit our GARCH model. Then, we used forecasting functions in our project to do volatility forecast, which are ugarchroll() and ugarchforecast().
+
+### Specify model
+
+#### Specify sGarch model
+
+```{r echo = TRUE}
+# Specify sGARCH model
+spec <- ugarchspec(
+    variance.model =
+      list(model = "sGARCH",
+           garchOrder = c(1,1)),
+      mean.model =
+      list(armaOrder = c(0,0),
+      include.mean = TRUE),
+    distribution.model = "ged"
+)
+```
+
+We choose the best model from the paper and reproduce it first. The best model is hybrid model ARIMA(p,1,q)-SGARCH(1,1) with GED distribution (SGARCH.GED 1000), so we define the model = "sGARCH" and define the distribution model as ged.
+
+```{r include = FALSE, echo = FALSE}
+# Fit to the data
+data -> y
+
+sGARCH <- ugarchfit(spec = spec,
+                     data = y,
+                    solver = 'hybrid')
+```
+
+```{r include = FALSE, echo = FALSE}
+sGARCH
+```
+
+#### Information Criteria for sGARCH
+
+```{R echo = FALSE}
+# Results information criteria
+infocriteria(sGARCH)
+```
+
+#### Specify eGarch model
+
+```{r echo = TRUE}
+# Specify eGARCH model
+spec <- ugarchspec(
+    variance.model =
+      list(model = "eGARCH",
+           garchOrder = c(1,1)),
+      mean.model =
+      list(armaOrder = c(0,0),
+      include.mean = TRUE),
+    distribution.model = "ged"
+)
+
+```
+
+```{r include = FALSE, echo = FALSE}
+# Fit to the data
+data -> y
+
+eGARCH <- ugarchfit(spec = spec,
+                     data = y,
+                    solver = 'hybrid')
+```
+
+#### Information Criteria for eGARCH
+
+```{r echo = FALSE}
+infocriteria(eGARCH)
+```
+
+#### SGARCH and EGARCH comparison
+
+These two models have similar information criteria, so we can say that it's somehow close to the comparison result in the paper since it has similar error metrics and performance metrics.
+
+```{r include = FALSE}
+# Standardized residuals
+plot(sGARCH, which = 10)
+```
+
+```{r include = FALSE}
+# Standardaied Squared residuals
+plot(sGARCH, which = 11)
+```
+
+### Forecast for fitted model
+
+#### Forecast using ugarchforecast()
+
+```{r echo = FALSE}
+forec <- ugarchforecast(sGARCH, data, n.ahead = 5)
+forec
+```
+
+It's convenient to use ugarchforecast() for forecast future returns, but it will have look-ahead bias, which it use the information that is not yet available or known. So we use...
+
+#### Rolling forecast using ugarchroll()
+
+We defined our window size in the rolling forecast, and according to the paper, there are three different window size, which are 1000, 500, 1500. We changed the window size in ugarchroll() function and hold all other things the same to do comparison.
+
+##### Rolling Forecast for window size 1000
+
+```{r echo = TRUE}
+# Example code with window size 1000
+roll <- ugarchroll(spec = spec, 
+                   data = data,
+                   n.ahead = 1,
+                   n.start = 3000,
+                   refit.every = 50,
+                   refit.window = "moving",
+                   solver = "hybrid",
+                   window.size = 1000,
+                   keep.coef = TRUE)
+
+show(roll)
+```
+
+```{r echo = FALSE}
+roll2 <- ugarchroll(spec = spec, 
+                   data = data,
+                   n.ahead = 1,
+                   n.start = 3000,
+                   refit.every = 50,
+                   refit.window = "moving",
+                   solver = "hybrid",
+                   window.size = 500,
+                   keep.coef = TRUE)
+```
+
+```{r echo = FALSE}
+roll3 <- ugarchroll(spec = spec, 
+                   data = data,
+                   n.ahead = 1,
+                   n.start = 3000,
+                   refit.every = 50,
+                   refit.window = "moving",
+                   solver = "hybrid",
+                   window.size = 1500,
+                   keep.coef = TRUE)
+```
+
+```{r include = FALSE}
+show(roll)
+```
+
+#### Rolling forecast error metrics
+
+##### Error Metircs for 1000 window size
+
+```{r echo = FALSE}
+rugarch::report(roll, type = "fpm")
+```
+
+##### Error Metrics for 500 window size
+
+```{r echo = FALSE}
+rugarch::report(roll2, type = "fpm")
+```
+
+##### Error Metrics for window size 1500
+
+```{r echo = FALSE}
+rugarch::report(roll3, type = "fpm")
+```
+
+Compared these the error metrics for these three models with different window size, w = 1000 and w = 1500 have the similar MSE, but w = 1000 has lower MAE, and w = 1000 and w = 500 has similar MAE but w = 1000 has lower MSE. It's obviously that hybrid Arima-SGARCH model with w = 1000 is the best model among these three models. Also, hybrid Arima(p,1,q)-SGARCH(1,1) with w=1000 will be the best model for predicting S&P 50o log return volatility since it has best performance.
+
 # 5. Conclusions
 
 # References
