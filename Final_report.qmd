@@ -14,11 +14,10 @@ This project delves into the theoretical framework of two types of models. It ai
 
 # 1. Introduction
 
-The importance of this topic can be condensed to 4 points:
+As we know, any kind of prediction is a challenging task, especially when the future is volatile. The stock market is unpredictable and extremely volatile by nature, with the free market theorem compared with other investments. Hence, lots of investors are willing to take risks in the hope of making profits from the volatility. Numerous factors might influence the market, such as economic factors, social events, government policies, supply, demand, etc. Yet it is still difficult to receive a good performance on stock-price predictions despite many factors being used. 
 
--   **Interest in the area**: attracted attention of researchers, investors, speculators, and governments
--   **ARIMA hybrid over ARIMA**: financial time series often do not follow ARIMA assumptions
--   **newest ML techniques to improve models**: We use Recurrent Neural Network(RNN) model to determine if it can reflect the specific time series characteristics and predict better.
+In this project, we will make attempts to predict day-ahead stock prices with only historical price data using different approaches. As we learned in lectures, the ARIMA model is a popular option when it comes 
+to time series analysis. However, due to the uniqueness of the financial time series, we will adopt an improved method to make the predictions. Another popular method for predicting stock prices is the Recurrent Neural Network. Many existing papers, research, and blogs made similarly or the same attempts to use neural networks to predict stock prices with historical data. Although we know it is not likely to produce highly accurate predictions of the stock price due to the nature of the free market, we wish to be able to compare and contrast the performances of the two different approaches. 
 
 # 2. Literature Review
 
