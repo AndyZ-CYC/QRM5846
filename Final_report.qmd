@@ -1,5 +1,5 @@
 ---
-title: "Performances of the Moving Average Model and the Artificial Neural Network on the Forecast of Stock Market Indices"
+title: "Performances of the Moving Average Model and the Recurrent Neural Network on the Forecast of Stock Market Indices"
 output:
   pdf_document:
     fig_caption: yes
@@ -10,7 +10,7 @@ editor: visual
 
 # Abstract
 
-This project delves into the theoretical framework of two types of models. It aims to compare and contrast the performances of the moving average model and the artificial neural network on the prediction of stock market indices. We used the data collected from Yahoo Finance with daily frequency for the period from 1 January 2000 to 31 December 2021. By using a rolling window approach, we evaluated ARIMA-SGARCH to reflect the specific time-series characteristics and have better predictive power than the simple ARIMA model and Recurrent Neural Network models. In order to assess the precision and quality of these models in forecasting, we compared their equity lines, their forecasting error metrics and their performance metrics. The main contribution of this research is to show that the hybrid ARIMA SGARCH model outperforms the other models over the long term.
+This project delves into the theoretical framework of two types of models. It aims to compare and contrast the performances of the moving average model and the recurrent neural network on the prediction of stock market indices. We used the data collected from Yahoo Finance with daily frequency for the period from 1 January 2000 to 31 December 2021. By using a rolling window approach, we evaluated ARIMA-SGARCH to reflect the specific time-series characteristics and have better predictive power than the simple ARIMA model and Recurrent Neural Network models. In order to assess the precision and quality of these models in forecasting, we compared their equity lines, their forecasting error metrics and their performance metrics. The main contribution of this research is to show that the hybrid ARIMA SGARCH model outperforms recurrent neural network over the long term.
 
 # 1. Introduction
 
@@ -22,7 +22,17 @@ The importance of this topic can be condensed to 4 points:
 
 # 2. Literature Review
 
-# 3. Methodology and Data
+## 2.1 Moving Average Model
+
+### Applying Hybrid ARIMA-SGARCH in Algorithmic Investment Strategies on S&P500 Index
+
+The article we choose to reproduce for hybrid Arima SGARCH model is wrote by Nguyen Vo and Robert Slepaczuk, which is to compare the performance of Arima and GARCH family models to forecast S&P500 log returns and find the investment strategy. The hypothesis for this article is that ARIMA(p,1,q)-SGARCH(1,1) (hybrid model) with window size equal to 1000 can generate an algorithmic trading strategy that outperforms ARIMA(p,1,q). This article has 25 pages in total length and made comparison in different models,  different window sizes,  and difference distribution models by using error metrics and performance statistics. After different comparison, the results shows that ARIMA(p,1,q)-SGARCH(1,1) with window size 1000 does outperform other models in both error metrics and performance statistics. Furthrmore, the hybrid methods can generate a strategy that can outperform the ARIMA model even when we change the assumption for family of GARCH , window sizes, and distributions models. 
+
+## 2.2 Artificial Neural Network
+
+### Stock Price Prediction Using Recurrent Neural Networks (2018)\[#\]
+
+This article by Israt Jahan tries to predict volatile financial instruments using the Recurrent Neural Network algorithm. Including the appendix, the whole article is 119 pages long and is very well structured. It explained the terminologies used for every detail and provided the data and code used in the process, making it easier to reproduce. According to Jahan, the advantage of Machine Learning are its ability to handle multi-dimensional data and its continuously quality improvable structure, especially in complex environments. The disadvantages are result interpretation and error diagnosis. Jahan used a single LSTM layer on five stock price time series. She compared predicted results with actual stock prices and concluded that "we can accurately predict the stock price one day ahead using this developed RNN-LSTM model."
 
 ## 3.1 Data Analysis
 
@@ -129,7 +139,7 @@ A **recurrent neural network** is a class of artificial neural network that uses
 
 #### Unroll RNN
 
-![Figure 6. Rolled RNN and Unrolled RNN \[1\]](images/unroll-RNN.png)
+![Rolled RNN and Unrolled RNN \[1\]](images/unroll-RNN.png)
 
 #### Recurrent Neural Network(RNN)
 
@@ -232,7 +242,7 @@ $$
 
 The previous steps conclude the architecture of the LSTM. The whole process can be summarized and displayed as the following:
 
-![Figure 7. LSTM Chain \[4\]](images/LSTM-chain.png)
+![LSTM Chain \[4\]](images/LSTM-chain.png)
 
 # 4. Results
 
@@ -445,11 +455,145 @@ rugarch::report(roll2, type = "fpm")
 rugarch::report(roll3, type = "fpm")
 ```
 
-Compared these the error metrics for these three models with different window size, w = 1000 and w = 1500 have the similar MSE, but w = 1000 has lower MAE, and w = 1000 and w = 500 has similar MAE but w = 1000 has lower MSE. It's obviously that hybrid Arima-SGARCH model with w = 1000 is the best model among these three models. Also, hybrid Arima(p,1,q)-SGARCH(1,1) with w=1000 will be the best model for predicting S&P 50o log return volatility since it has best performance.
+Compared these the error metrics for these three models with different window size, w = 1000 and w = 1500 have the similar MSE, but w = 1000 has lower MAE, and w = 1000 and w = 500 has similar MAE but w = 1000 has lower MSE. It's obviously that hybrid Arima-SGARCH model with w = 1000 is the best model among these three models. Also, hybrid Arima(p,1,q)-SGARCH(1,1) with w=1000 will be the best model for predicting S&P 500 log return volatility since it has best performance.
+
+## 4.2 Model: RNN-LSTM
+
+### 4.2.1 Workflow
+
+As the target is to reproduce the result of the article "Stock Price Prediction Using Recurrent Neural Networks" by Israt Jahan, understanding the article itself is essential. The whole workflow of the article is in the following order: data collection, train-test split, data scale and preprocess, RNN setup and define LSTM cell, define loss and optimization function, train the RNN and calculate the loss, and then go back to LSTM cell step and tune the model parameters, and recalculate loss. The model itself will repeat this process until loss does not decrease, which means the model converges and is ready to be used.
+
+### 4.2.2 Data Gather, Split, and Scale
+
+The data article used is the closing price of Netflix stock from "2013-01-01" to "2017-12-31". A total of 1259 days of data were gathered, and 1008 of them were used as training data. Basically, the data of first four years. A Min-Max Scale technique was then applied to the training dataset, as shown below, and a reverse scale was needed after predicting.
+
+$$
+x' = \frac{x - min(x)}{max(x) - min(x)}
+$$ 
+
+In order to reproduce, we downloaded same data from Yahoo finance.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
+library(tidyquant)
+library(tidyverse)
+library(tensorflow)
+library(keras)
+```
+
+```{r, echo=TRUE}
+start_date = "2013-01-01"; end_date = "2017-12-31"
+
+nflx_prices <- tq_get("NFLX", get = "stock.prices",
+                 from = start_date, to = end_date)
+
+stock <- nflx_prices |> arrange(date) |>
+  select(date, close) |> column_to_rownames('date')
+
+head(stock, 3)
+```
+
+Then, we do a data split and Max-Min scale. To exactly mimic the scale process in the article and to make sure reverse scale process is accurate, we wrote our own function. The first 1008 data point is assigned to `train_set`.
+
+```{r, echo=TRUE}
+# Max Min Scale
+max_min_scale <- function(x, name = 'value') {
+  df <- data.frame((x- min(x)) /(max(x)-min(x)))
+  colnames(df) <- name; df}
+max_min_scale_reverse <- function(y, x) {
+  min(x) + y * (max(x)-min(x))}
+
+train_set <- stock[1:1008,]
+test_set <- stock[1009:nrow(stock),]
+train_scaled <- train_set %>% max_min_scale
+head(train_scaled, 3)
+```
+
+LSTM model requires its input data to be in three dimension shape (x, y, z). The dimension $x$ represents the number of batches, $y$ represents the time series length, and $z$ represents batch size. In the article, their input shape is different because they are using TensorFlow version 1, which is different from what we are using, TensorFlow version 2. Since 22 is approximately the number of trading dates in a month, we believe it is a reasonable choice as a time series window
+
+```{r, echo=TRUE}
+data_prep <- function(scaled_data, prediction = 1, lag = 22){
+  x_data <- t(sapply(1:(dim(scaled_data)[1] - lag - prediction + 1),
+                  function(x) scaled_data[x: (x + lag - 1), 1]))
+  x_arr <- array(data = as.numeric(unlist(x_data)), 
+                 dim = c(nrow(x_data), lag, 1))
+  y_data <- t(sapply((1 + lag):(dim(scaled_data)[1] - prediction + 1), 
+                     function(x) scaled_data[x: (x + prediction - 1), 1])) 
+  y_arr <- array(data = as.numeric(unlist(y_data)), 
+                 dim = c(length(y_data), prediction, 1))
+  return(list(x = x_arr, y = y_arr))}
+
+x_train = data_prep(train_scaled)$x
+y_train = data_prep(train_scaled)$y
+cat('x_train_shape: (', dim(x_train), ') \ny_train_shape: (', dim(y_train), ')')
+```
+
+### 4.2.3 RNN Setup
+
+There are several important parameters to set up the RNN and LSTM cell. The `num_neurons` is the number of hidden layers in the LSTM cell. The more hidden layers we set, the more complicated the model is, which does not mean the model is better. Another parameter is `learning_rate`, which indicates how much change we want to make on hidden layer parameters each iteration. The larger the learning rate, the faster the model outcome changes, but this does not mean a quicker convergence. A common problem with large learning rate models is that they change parameters too much and end up missing the best parameter set in the middle. The article set the `num_neurons` to be 500, which is too many for TensorFlow version 2 models. Hence we reduced it to 50. The `learning_rate` was 0.002, and we adopted it in our model.
+
+The activation function article used was ReLU, the loss is MSE, and the optimizer is Adam. To reproduce their result, we used the same setting.
+
+```{r, echo=TRUE}
+num_neurons = 50
+learning_rate = 0.002
+# Define LSTM
+get_model <- function(){
+  model <- keras_model_sequential() |>
+    layer_lstm(units = num_neurons, 
+               batch_input_shape = c(1, 22, 1), 
+               activation = 'relu', # Activation function is ReLU
+               stateful = TRUE) |>
+    layer_dense(units = 1) 
+  
+  model %>% compile(loss = 'mse', metrics = 'mae', # Loss is MSE
+    optimizer=optimizer_adam(learning_rate=learning_rate)) # Optimizer Adam
+}
+```
+
+```{r, echo=FALSE}
+lstm_model <- get_model()
+summary(lstm_model)
+```
+
+The model structure is as shown above. A dense layer is added to flatten the shape of the LSTM output to match our desired output shape.
+
+### 4.2.4 Model Fit and Make Prediction
+
+After set up data and RNN model, we start fitting. In the code below, the `epochs` means the number of iterations we want the model to do. For each iteration, the model back feed the loss result from last iteration and update the parameters. We set `epochs = 15` which means we want the model to update the parameters 15 times.
+
+```{r, echo=TRUE}
+set_random_seed(1209)
+lstm_model <- get_model()
+lstm_model %>% fit(x = x_train, y = y_train, batch_size = 1,
+    epochs = 15, verbose = 2, shuffle = FALSE) -> history
+```
+
+```{r, fig.width=6, fig.height=3}
+data.frame("x" = seq(1, 15), "y" = history$metrics$loss) -> df
+
+df %>% ggplot(aes(x = x, y = y)) +
+    geom_line(col = '#42a5f5') +
+  geom_point(col = '#2c8fdf') + 
+  labs(title = 'Loss History',
+       x = 'Epoch', y = 'Loss(mse)')
+```
+
+In the first several epochs, the loss increased, which means the model adjusted the parameters in the wrong direction, but later it found the way to reduce loss, and slowly at around epoch 10, converged.
+
+### 4.2.5 Result Comparison with Article
+
+
+### 4.2.5 Result Comparison with ARIMA SGARCH
+
+
+### 4.2.6 Price Movement Model
+
 
 # 5. Conclusions
 
 # References
+
+Vo, Nguyen, and Robert Slepaczuk. Entropy, 20 Jan. 2022, <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8870867/pdf/entropy-24-00158.pdf.>
 
 \[1\] IBM Cloud Education, "Recurrent Neural Network." IBM. September 14, 2020. [https://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gmhttps://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gm](https://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gmhttps://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gm){.uri}
 
