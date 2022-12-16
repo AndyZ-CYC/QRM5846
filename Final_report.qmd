@@ -10,26 +10,25 @@ editor: visual
 
 # Abstract
 
-This project delves into the theoretical framework of two types of models. It aims to compare and contrast the performances of the moving average model and the recurrent neural network on the prediction of stock market indices. We used the data collected from Yahoo Finance with daily frequency for the period from 1 January 2000 to 31 December 2021. By using a rolling window approach, we evaluated ARIMA-SGARCH to reflect the specific time-series characteristics and have better predictive power than the simple ARIMA model and Recurrent Neural Network models. In order to assess the precision and quality of these models in forecasting, we compared their equity lines, their forecasting error metrics and their performance metrics. The main contribution of this research is to show that the hybrid ARIMA SGARCH model outperforms recurrent neural network over the long term.
+This project delves into the theoretical framework of two types of models. It aims to compare and contrast the performances of the moving average model and the recurrent neural network on the prediction of stock market indices. We used the data from Yahoo Finance with daily frequency from 1 January 2000 to 31 December 2021. Using a rolling window approach, we evaluated ARIMA-SGARCH to reflect the specific time-series characteristics and have better predictive power than the simple ARIMA and Recurrent Neural Network models. To assess the precision and quality of these models in forecasting, we compared their equity, their forecasting error metrics, and their performance metrics. The main contribution of this research is to show that the hybrid ARIMA SGARCH model outperforms recurrent neural networks in predicting log-return.
 
 # 1. Introduction
 
-As we know, any kind of prediction is a challenging task, especially when the future is volatile. The stock market is unpredictable and extremely volatile by nature, with the free market theorem compared with other investments. Hence, lots of investors are willing to take risks in the hope of making profits from the volatility. Numerous factors might influence the market, such as economic factors, social events, government policies, supply, demand, etc. Yet it is still difficult to receive a good performance on stock-price predictions despite many factors being used. 
+As we know, any kind of prediction is a challenging task, especially when the future is volatile. The stock market is unpredictable and extremely volatile by nature, with the free market theorem compared with other investments. Hence, lots of investors are willing to take risks in the hope of making profits from the volatility. Numerous factors might influence the market, such as economic factors, social events, government policies, supply, demand, etc. Yet it is still difficult to receive a good performance on stock-price predictions despite many factors being used.
 
-In this project, we will make attempts to predict day-ahead stock prices with only historical price data using different approaches. As we learned in lectures, the ARIMA model is a popular option when it comes 
-to time series analysis. However, due to the uniqueness of the financial time series, we will adopt an improved method to make the predictions. Another popular method for predicting stock prices is the Recurrent Neural Network. Many existing papers, research, and blogs made similarly or the same attempts to use neural networks to predict stock prices with historical data. Although we know it is not likely to produce highly accurate predictions of the stock price due to the nature of the free market, we wish to be able to compare and contrast the performances of the two different approaches. 
+In this project, we will make attempts to predict day-ahead stock prices with only historical price data using different approaches. As we learned in lectures, the ARIMA model is a popular option when it comes to time series analysis. However, due to the uniqueness of the financial time series, we will adopt an improved method to make the predictions. Another popular method for predicting stock prices is the Recurrent Neural Network. Many existing papers, research, and blogs made similarly or the same attempts to use neural networks to predict stock prices with historical data. Although we know it is not likely to produce highly accurate predictions of the stock price due to the nature of the free market, we wish to be able to compare and contrast the performances of the two different approaches.
 
 # 2. Literature Review
 
 ## 2.1 Moving Average Model
 
-### Applying Hybrid ARIMA-SGARCH in Algorithmic Investment Strategies on S&P500 Index
+### Applying Hybrid ARIMA-SGARCH in Algorithmic Investment Strategies on S&P500 Index \[6\]
 
-The article we choose to reproduce for hybrid Arima SGARCH model is wrote by Nguyen Vo and Robert Slepaczuk, which is to compare the performance of Arima and GARCH family models to forecast S&P500 log returns and find the investment strategy. The hypothesis for this article is that ARIMA(p,1,q)-SGARCH(1,1) (hybrid model) with window size equal to 1000 can generate an algorithmic trading strategy that outperforms ARIMA(p,1,q). This article has 25 pages in total length and made comparison in different models,  different window sizes,  and difference distribution models by using error metrics and performance statistics. After different comparison, the results shows that ARIMA(p,1,q)-SGARCH(1,1) with window size 1000 does outperform other models in both error metrics and performance statistics. Furthrmore, the hybrid methods can generate a strategy that can outperform the ARIMA model even when we change the assumption for family of GARCH , window sizes, and distributions models. 
+The article we choose to reproduce for hybrid Arima SGARCH model is wrote by Nguyen Vo and Robert Slepaczuk, which is to compare the performance of Arima and GARCH family models to forecast S&P500 log returns and find the investment strategy. The hypothesis for this article is that ARIMA(p,1,q)-SGARCH(1,1) (hybrid model) with window size equal to 1000 can generate an algorithmic trading strategy that outperforms ARIMA(p,1,q). This article has 25 pages in total length and made comparison in different models, different window sizes, and difference distribution models by using error metrics and performance statistics. After different comparison, the results shows that ARIMA(p,1,q)-SGARCH(1,1) with window size 1000 does outperform other models in both error metrics and performance statistics. Furthrmore, the hybrid methods can generate a strategy that can outperform the ARIMA model even when we change the assumption for family of GARCH , window sizes, and distributions models.
 
 ## 2.2 Artificial Neural Network
 
-### Stock Price Prediction Using Recurrent Neural Networks (2018)\[#\]
+### Stock Price Prediction Using Recurrent Neural Networks (2018) \[3\]
 
 This article by Israt Jahan tries to predict volatile financial instruments using the Recurrent Neural Network algorithm. Including the appendix, the whole article is 119 pages long and is very well structured. It explained the terminologies used for every detail and provided the data and code used in the process, making it easier to reproduce. According to Jahan, the advantage of Machine Learning are its ability to handle multi-dimensional data and its continuously quality improvable structure, especially in complex environments. The disadvantages are result interpretation and error diagnosis. Jahan used a single LSTM layer on five stock price time series. She compared predicted results with actual stock prices and concluded that "we can accurately predict the stock price one day ahead using this developed RNN-LSTM model."
 
@@ -77,11 +76,15 @@ We use log returns to build models
 
 ### 3.2.1 ARIMA (p,d,q)
 
-The ARMA process is the combination of the autoregressive model and moving average \[2\] designed for a stationary time series. Autoregression (AR) describes a stochastic process, and AR(p) can be denoted as shown below: $$
+The ARMA process is the combination of the autoregressive model and moving average designed for a stationary time series. Autoregression (AR) describes a stochastic process, and AR(p) can be denoted as shown below: 
+
+$$
   y_{t} = c + \phi_{1}y_{t - 1} + \phi_{2}y_{t - 2} + \cdots + \phi_{p}y_{t - p} + \varepsilon_{t},
 $$
 
-The moving average process of order q is denoted as MA(q) and the created time series contains a mean of q lagged white noise variables shifting along the series. $$
+The moving average process of order q is denoted as MA(q) and the created time series contains a mean of q lagged white noise variables shifting along the series. 
+
+$$
   y_{t} = c + \varepsilon_t + \theta_{1}\varepsilon_{t - 1} + \theta_{2}\varepsilon_{t - 2} + \cdots + \theta_{q}\varepsilon_{t - q},
 $$
 
@@ -91,40 +94,49 @@ $$\text{Expand:}\qquad
   y_t = c + y_{t-1} + \phi_1 y_{t-1}- \phi_1 y_{t-2} + \theta_1\varepsilon_{t-1} + \varepsilon_t
 $$
 
+
 p is the number of autoregressive terms (AR) q is the number of moving average terms (MA)
 
-#### ARCH(p), GARCH(r,s) and Hybrid ARIMA-SGARCH
+#### 3.2.1.1 ARCH(p), GARCH(r,s) and Hybrid ARIMA-SGARCH
 
 The `ARCH(p)` model is given:
 
-$$\sigma_t^2 = \omega + \sum_{i=1}^{p}\alpha_{i}u^2_{t-i}$$ - Most volatility models derive from this - Returns have a conditional distribution (here assumed to be normal) ARCH is not a very good model and almost nobody uses it. - The reason is that it needs to use information from many days before $t$ to calculate volatility on day $t$. That is, it needs a lot of lags. - The solution is to write it as an ARMA model. - That is, add one component to the equation, $\beta\sigma_{t-1}$.
+$$\sigma_t^2 = \omega + \sum_{i=1}^{p}\alpha_{i}u^2_{t-i}$$
 
-The `GARCH(p,q)` model is $$\sigma_t^2 = \omega + \sum_{i=1}^{p}\alpha_{i}u^2_{t-i} + \sum_{j=1}^{q}\beta_{j}\sigma^2_{t-j}$$
+-   Most volatility models derive from this
+-   Returns have a conditional distribution (here assumed to be normal) ARCH is not a very good model and almost nobody uses it.
+-   The reason is that it needs to use information from many days before $t$ to calculate volatility on day $t$. That is, it needs a lot of lags.
+-   The solution is to write it as an ARMA model.
+-   That is, add one component to the equation, $\beta\sigma_{t-1}$.
+
+The `GARCH(p,q)` model is 
+
+$$\sigma_t^2 = \omega + \sum_{i=1}^{p}\alpha_{i}u^2_{t-i} + \sum_{j=1}^{q}\beta_{j}\sigma^2_{t-j}$$
 
 Where: $\alpha$ is news. $\beta$ is memory. The size of $(\alpha + \beta)$ determines how quickly the predictability of the process dies out.
 
 This leads us to lastly, ARIMA-SGarch
 
-#### ARIMA SGARCH - Overview
+#### 3.2.1.2 ARIMA SGARCH - Overview
 
 Stock prices can be tremendously volatile during economic growth as well as recessions. When homoskedasticity presumption is violated, it affects the validity or power of statistical tests when using ARIMA models. We consider the SGARCH effect. The error term of the ARIMA model in this process follows SGARCH(1,1) instead of being assumed constant like the ARIMA model.
 
-#### ARIMA SCGARCH - Steps
+#### 3.2.1.3 ARIMA SCGARCH - Steps
 
 1)  We conduct a rolling forecast based on an ARIMA-SGARCH model with window size(s) equal to 1000.
 2)  The optimized combination of p and q which has the lowest AIC is used to predict return for the next point. At the end, the vector of forecasted values has the length of 3530 elements
 3)  We describe and review our implementation of dynamic ARIMA(p,1,q)-SGARCH(1,1) models with GED distribution and window size(s) equal to 1000.
 4)  we evaluate the results based on error metrics, performance metrics, and equity curves.
 
-#### Iteration of the forecasting model ARIMA(p,1,q)-SGARCH(1,1)
+##### Iteration of the forecasting model ARIMA(p,1,q)-SGARCH(1,1)
 
-```{r figs 4, out.width = "250px", fig.cap="\\label{fig:figs}ARIMA iteration"}
+```{r figs 4, out.width = "250px", fig.cap="\\label{fig:figs}ARIMA Iteration [6]"}
 knitr::include_graphics("images/ARIMA_iteration.png")
 ```
 
-#### Flowchart of the forecasting model ARIMA(p,1,q)-SGARCH(1,1).
+##### Flowchart of the forecasting model ARIMA(p,1,q)-SGARCH(1,1).
 
-```{r figs 5, out.width = "250px", fig.cap="\\label{fig:figs}ARIMA_SGARCH methodology"}
+```{r figs 5, out.width = "250px", fig.cap="\\label{fig:figs}ARIMA_SGARCH Methodology [6]"}
 knitr::include_graphics("images/ARIMA_SGARCH_methodology.png")
 ```
 
@@ -132,43 +144,43 @@ Flowchart of the forecasting model ARIMA(p,1,q)-SGARCH(1,1). This flowchart is f
 
 ### 3.2.2 RNN-LSTM Model
 
-#### Recurrent Neural Network(RNN)
+#### 3.2.2.1 Recurrent Neural Network(RNN)
 
 A **recurrent neural network** is a class of artificial neural network that uses sequential or time series data \[1\]. Unlike Feedforward Neural Network, RNN allows the output from some nodes to affect subsequent input to the same nodes by using connections between nodes to create cycles. As a result, the hidden layers produce the outputs with the input information and prior "memory" received from previous learning.
 
-#### Unroll RNN
+##### Unroll RNN
 
 ![Rolled RNN and Unrolled RNN \[1\]](images/unroll-RNN.png)
 
-#### Recurrent Neural Network(RNN)
+##### Recurrent Neural Network(RNN)
 
 Another distinguish characteristic of RNN is that they share parameters across each layer of the network. Unlike feedforward neural networks having individual weight and bias for each node in one layer, recurrent neural networks share the same weight parameter within each layer. However, these weights are still adjusted during the processes of backpropagation and gradient descent to facilitate reinforcement learning.
 
 In feedforward neural network, backpropagation algorithm was used to calculate the gradient with respect to the weights. Recurrent neural network, on the other side, leverage backpropagation through time (BPTT) algorithm to determine the gradient as BPTT is specific to sequential data.
 
-#### Activation Functions
+##### Activation Functions
 
 In neural networks, an activation function determines whether a neuron should be activated and typically maps the input to $[0, 1]$ or $[-1, 1]$. The followings are two of the most commonly used activation functions and will be adopted later:
 
-##### Sigmoid
+###### Sigmoid
 
 $$
 \sigma(x) = \frac{1}{1 + e^{-x}}
 $$
 
-##### Tanh (Hyperbolic tangent)
+###### Tanh (Hyperbolic tangent)
 
 $$
 tanh(x) = \frac{e^{x}-e^{-x}}{e^{x}+e^{-x}}
 $$
 
-##### ReLU (Rectified Linear Unit) Activation Function
+###### ReLU (Rectified Linear Unit) Activation Function
 
 $$
 R(x) = max(0, x)
 $$
 
-#### Long Short-term Memory (LSTM)
+#### 3.2.2.2 Long Short-term Memory (LSTM)
 
 Long short-term memory network, usually known as LSTM, is a specific RNN architecture first introduced by Sepp Hochreiter and Juergen Schmidhuber as a solution to vanishing gradient problem \[2\]. Recall with an RNN, similar with human reading a book and remembering what happened in the earlier chapter, it remembers the previous information and use it for processing the current input. The shortcoming of the NN is that it is not able to remember long term dependencies due to the vanishing gradient. The LSTM is designed to alleviate and avoid such issues.
 
@@ -178,7 +190,7 @@ The LSTM consists of three parts \[5\]:
 -   **Input Gate**: Learn new information from the input to this cell
 -   **Output Gate**: Passes the updated information tot the next time stamp
 
-#### Forget Gate
+##### Forget Gate
 
 In an LSTM cell, the cell first need to decide if the information from previous time stamp should be kept or forgotten. The equation of the forget gate is:
 
@@ -195,7 +207,7 @@ Where
 
 After that, a `sigmoid` function is applied over $f_t$ and make it a number between $0$ and $1$. Then $f_t$ is multiplied with the previous cell state. If $f_t=0$, the network will forget everything from the previous time stamp while $f_t=1$ represents that the network will remember everything.
 
-#### Input Gate and new information
+##### Input Gate and new information
 
 Next we decide what new information we will store in the cell state. First, the input gate decides which values we'll update with `sigmoid` activation function:
 
@@ -213,7 +225,7 @@ $$
 \tilde{C_t} = tanh(W_C\cdot[x_t, h_{t-1}] + b_C)
 $$
 
-#### New Cell State $C_t$
+##### New Cell State $C_t$
 
 With previous work, the LSTM cell now updates the new cell state for the current time stamp as:
 
@@ -223,7 +235,7 @@ $$
 
 The current cell state $C_t$ combines how much we decide to remember from the previous cell state $C_{t-1}$ scaled by the forget gate and how much we wish to take in from the new current input $\tilde{C_t}$ scaled by the input gate.
 
-#### Output Gate
+##### Output Gate
 
 Finally, the cell needs to decide what it is going to output and by how much. The filter of the output is the output gate, with the following equation:
 
@@ -237,7 +249,7 @@ $$
 h_t = o_t * tanh(C_t)
 $$
 
-#### Overall Module
+##### Overall Module
 
 The previous steps conclude the architecture of the LSTM. The whole process can be summarized and displayed as the following:
 
@@ -278,7 +290,7 @@ plot(returns)
 
 In the paper, it had several different models, including SGARCH, EGARCH and Arima, etc. In the best model Arima-SGARCH, it tested for different window size and ,distribution model, and made the conclusion that hybrid Arima(p,1,q)- SGARCH(1,1) with w=1000 is the best model with best window size and distribution model according to the error metrics. In this section, we used 'rugarch' package to fit the hybrid Arima-GARCH model, compare the hybrid model, and do rolling forecast. so first, we will introduce a little bit about this package.
 
-### 'rugarch' package exploration
+### 4.1.1 'rugarch' package exploration \[7\]
 
 -   **ugarchspec()**: Method for creating a univariate GARCH specification object prior to fitting.
 -   **ugarchfit()**: Method for fitting a variety of univariate GARCH models.
@@ -290,7 +302,7 @@ In the paper, it had several different models, including SGARCH, EGARCH and Arim
 
 We used the ugarchspec() to define our model, and ugarchfit() to fit our GARCH model. Then, we used forecasting functions in our project to do volatility forecast, which are ugarchroll() and ugarchforecast().
 
-### Specify model
+### 4.1.2 Specify model
 
 #### Specify sGarch model
 
@@ -374,7 +386,7 @@ plot(sGARCH, which = 10)
 plot(sGARCH, which = 11)
 ```
 
-### Forecast for fitted model
+### 4.1.2 Forecast for fitted model
 
 #### Forecast using ugarchforecast()
 
@@ -460,7 +472,7 @@ Compared these the error metrics for these three models with different window si
 
 ### 4.2.1 Workflow
 
-As the target is to reproduce the result of the article "Stock Price Prediction Using Recurrent Neural Networks" by Israt Jahan, understanding the article itself is essential. The whole workflow of the article is in the following order: data collection, train-test split, data scale and preprocess, RNN setup and define LSTM cell, define loss and optimization function, train the RNN and calculate the loss, and then go back to LSTM cell step and tune the model parameters, and recalculate loss. The model itself will repeat this process until loss does not decrease, which means the model converges and is ready to be used.
+As the target is to reproduce the result of the article "Stock Price Prediction Using Recurrent Neural Networks" by Israt Jahan [3], understanding the article itself is essential. The whole workflow of the article is in the following order: data collection, train-test split, data scale and preprocess, RNN setup and define LSTM cell, define loss and optimization function, train the RNN and calculate the loss, and then go back to LSTM cell step and tune the model parameters, and recalculate loss. The model itself will repeat this process until loss does not decrease, which means the model converges and is ready to be used.
 
 ### 4.2.2 Data Gather, Split, and Scale
 
@@ -468,7 +480,7 @@ The data article used is the closing price of Netflix stock from "2013-01-01" to
 
 $$
 x' = \frac{x - min(x)}{max(x) - min(x)}
-$$ 
+$$
 
 In order to reproduce, we downloaded same data from Yahoo finance.
 
@@ -564,10 +576,10 @@ After set up data and RNN model, we start fitting. In the code below, the `epoch
 set_random_seed(1209)
 lstm_model <- get_model()
 lstm_model %>% fit(x = x_train, y = y_train, batch_size = 1,
-    epochs = 15, verbose = 2, shuffle = FALSE) -> history
+    epochs = 15, verbose = 0, shuffle = FALSE) -> history
 ```
 
-```{r, fig.width=6, fig.height=3}
+```{r, fig.width=6, fig.height=3, echo=FALSE}
 data.frame("x" = seq(1, 15), "y" = history$metrics$loss) -> df
 
 df %>% ggplot(aes(x = x, y = y)) +
@@ -579,22 +591,180 @@ df %>% ggplot(aes(x = x, y = y)) +
 
 In the first several epochs, the loss increased, which means the model adjusted the parameters in the wrong direction, but later it found the way to reduce loss, and slowly at around epoch 10, converged.
 
+Now that our model is well trained, we can make prediction use it. A for loop is used for the prediction as we need to scale the test data, make prediction, and scale it back.
+
+```{r, echo=TRUE}
+model_prediction_lstm <- function(test_len, whole_data, model){
+  t <- test_len # test size
+  Tt <- nrow(whole_data) # whole data size
+  t_start <- Tt - t + 1 # test start date
+  predictions <- vector(length = t)
+  for (i in 1:t){
+    n <- t_start - 1 + i
+    test_set = pull(whole_data)[(n-22):n]
+    test_scaled <- test_set %>% max_min_scale
+    x_test = data_prep(test_scaled)$x
+    y_pred_scaled <- stats::predict(model, x_test, verbose = 0)
+    y_pred <- max_min_scale_reverse(y_pred_scaled, test_set)
+    predictions[i] <- y_pred
+  }
+  pred_df <- data.frame('date' = rownames(whole_data)[t_start:Tt] %>% as_date(),
+    'pred' = predictions, 'actual' = pull(whole_data)[t_start:Tt])
+  pred_df
+}
+```
+
+```{r, echo=TRUE, echo=FALSE}
+model_prediction_lstm(length(test_set), stock, lstm_model) -> pred_df
+pred_df %>% head(3)
+```
+
+```{r, fig.width=6, fig.height=3, echo=FALSE}
+pred_df_long <- pred_df %>% pivot_longer(cols = c(pred, actual), 
+                       names_to = "type", values_to = "price")
+
+pred_df_long %>% ggplot(aes(x = date, y = price, color = type)) +
+  geom_line() +
+  labs(x = 'Date', y = 'Price($)', color = 'Type') +
+  theme(legend.position = 'top')
+```
+
+The prediction results look pretty nice, the green line is close to the red line as we wanted.
+
 ### 4.2.5 Result Comparison with Article
 
+The article showed its results both in graphs and in percentage error. To better compare, we reproduced the graph in exact same format and color.
+
+![Article Result - Comparison of NFLX Monthly Mean \[3\]](images/RNN_monthly_result.png)
+
+```{r, fig.width=5, fig.height=3.5, echo=FALSE}
+pred_df_monthly <- pred_df_long %>% mutate(month = month.abb[month(date)]) %>%
+  group_by(month, type) %>% summarise(avg_price = mean(price), .groups = 'drop')
+
+pred_df_monthly$month <- factor(pred_df_monthly$month, levels = month.abb)
+
+ggplot(pred_df_monthly, aes(x=month, y=avg_price, fill=type)) +
+  geom_bar(stat = "identity", position="dodge", width = 0.65) +
+  scale_fill_manual(values = c("actual" = '#393b79', 'pred' = '#de9ed6')) +
+  labs(title = 'Reproduce Result - Comparison of NFLX Monthly Mean, 2017',
+       y = 'Adjusted Price', x = 'Date', fill = '') +
+  theme_classic() +
+  theme(legend.position = 'bottom') 
+```
+
+As we can see, the graphs are quite similar. And if we look at the statistics below, our percentage error stats results are actually lower than the the article's, and the coefficient of determination ($R^2$) is very close. We consider this as a successful reproduce.
+
+```{r, echo=FALSE}
+data.frame('mean'= 2.00, 'std'= 1.54, 'variabce' = 2.38,
+           'min' = 0.00, '25_percentile' = 0.80, '50_percentile' = 1.65, 
+           '75_percentile' = 2.96, 'max' = 9.25, 'R_squared' = 0.9589) %>% 
+  pivot_longer(cols = c(mean:R_squared), names_to = '|% of Error|', 
+               values_to = 'Article') -> comparison
+
+pred = pred_df$pred
+y = pred_df$actual
+rsq <- sum((pred_df$pred-mean(y))^2)/sum((y-mean(y))^2)
+
+per_err <- pred_df %>% mutate(percent_err = abs(pred-actual)/actual * 100) %>% 
+  pull(percent_err)
+```
+
+```{r,echo=FALSE}
+comparison %>% cbind('Our Results' = c(mean(per_err), StdDev(per_err),
+                      StdDev(per_err)^2, quantile(per_err), rsq))
+```
 
 ### 4.2.5 Result Comparison with ARIMA SGARCH
 
+Our final goal is to compare the ARIMA SGARCH model and RNN model. To do that, we re-fit the same model to log-return of the S&P500 in the same period.
 
-### 4.2.6 Price Movement Model
+```{r, echo=TRUE}
+# Data Preparation
+sp_prices <- tq_get("^GSPC", get = "stock.prices",
+                 from = "2000-01-01", to = "2021-12-31")
+return <- sp_prices |> arrange(date) |>
+  mutate(return = log(adjusted) - log(lag(adjusted))) |>
+  drop_na(return) %>% select(date, return)
+# scale
+return$return <- max_min_scale(return$return) %>% pull(value)
+# train test split
+test_date <- "2019-01-01"
+train_data_n <- return |> filter(date <= test_date) %>% column_to_rownames('date')
+test_data_n <- return |> filter(date >= test_date) %>% column_to_rownames('date')
+# data reshape
+x_train_new = data_prep(train_data_n)$x; y_train_new = data_prep(train_data_n)$y
+cat('x_train_shape: (', dim(x_train_new), ') \ny_train_shape: (', dim(y_train_new), ')')
+```
 
+As shown above, we have much more batches this time.
+
+```{r, echo=FALSE}
+return_new <- return %>% column_to_rownames('date')
+
+model_eval <- function(y, pred){
+  mse <- mean((pred - y)^2)
+  mae <- mean(abs(pred-y))
+  rmse <- sqrt(mean(pred-y)^2)
+  rsq <- sum((pred-mean(y))^2)/sum((y-mean(y))^2)
+  data.frame('MSE' = mse, 'MAE' = mae, 'RMSE' = rmse, 'Rsq' = rsq)
+}
+```
+
+```{r, echo=FALSE}
+set_random_seed(1209)
+lstm_model2 <- get_model()
+lstm_model2 %>% fit(x = x_train_new, y = y_train_new, batch_size = 1,
+    epochs = 15, verbose = 0, shuffle = FALSE) -> history2
+
+pred_df2 <- model_prediction_lstm(nrow(test_data_n), return_new, lstm_model2)
+```
+
+```{r, fig.width=6, fig.height=3, echo=FALSE}
+data.frame("x" = seq(1, 15), "y" = history2$metrics$loss) -> df
+
+df %>% ggplot(aes(x = x, y = y)) +
+    geom_line(col = '#42a5f5') +
+  geom_point(col = '#2c8fdf') + 
+  labs(title = 'Loss History',
+       x = 'Epoch', y = 'Loss(mse)')
+```
+
+```{r, fig.width=6, fig.height=3, echo=FALSE}
+pred_df_long <- pred_df2 %>% pivot_longer(cols = c(pred, actual), 
+                       names_to = "type", values_to = "price")
+
+pred_df_long %>% ggplot(aes(x = date, y = price, color = type)) +
+  geom_line() +
+  labs(x = 'Date', y = 'Price($)', color = 'Type') +
+  theme(legend.position = 'top')
+```
+
+```{r, echo=FALSE}
+model_eval(pred_df2$actual, pred_df2$pred) -> eval_lstm
+eval_lstm
+```
+
+The graph above shows that the results are not as good as before. The LSTM model is afraid to go too high or too low and just wonders in the middle.
 
 # 5. Conclusions
 
+```{r, echo=FALSE}
+data.frame('MSE'= 0.0001065, 'MAE'= 0.0065340) %>% 
+  pivot_longer(cols = c(MSE:MAE), names_to = 'Error Metrics', 
+               values_to = 'sGARCH') -> comparison2
+
+comparison2 %>% cbind('RNN_LSTM' = c(eval_lstm$MSE, eval_lstm$MAE))
+```
+
+As the results shown above, the ARIMA-SGARCH model outperformed RNN-LSTM model, and by a lot. This is not what we initially predicted, which makes it very interesting. Neural networks usually are seen as powerful and complicated. It is said to mimic the human brain, which does many things other models cannot do, like image recognition and the natural language process. For example, the type of Neural Network used in stock prediction - LSTM, is very useful in language translation. 
+
+Two reasons might explain the finding here. Firstly, Neural Network is inspired by the human brain, but the stock market is so volatile that even a real human brain cannot make an accurate prediction. Secondly, we only used one layer or LSTM, which is one of the most simple NN structures. In real life, a useful Neural Network can have hundreds of layers and be trained with much more data points. Hence, we cannot conclude the usefulness of Neural Network models based on our results. 
+
+All in all, simple layer LSTM is not as good as the ARIMA-SGARCH model when predicting stock market log-return. But we see some promising results from LSTM predicting stock price. The ARIMA-SGARCH model is very good for log-return prediction, and the RNN-LSTM model has potential for some financial instruments and is worth future exploring.
+
 # References
 
-Vo, Nguyen, and Robert Slepaczuk. Entropy, 20 Jan. 2022, <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8870867/pdf/entropy-24-00158.pdf.>
-
-\[1\] IBM Cloud Education, "Recurrent Neural Network." IBM. September 14, 2020. [https://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gmhttps://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gm](https://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gmhttps://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gm){.uri}
+\[1\] IBM Cloud Education, "Recurrent Neural Network." IBM. September 14, 2020. <https://www.ibm.com/cloud/learn/recurrent-neural-networks#toc-types-of-r-q1VkG6gm>
 
 \[2\] Hochreiter, Sepp and Schmidhuber, Jürgen, "Long Short-Term Memory." Neural Computation. 1997. <http://dx.doi.org/10.1162/neco.1997.9.8.1735>
 
@@ -603,3 +773,7 @@ Vo, Nguyen, and Robert Slepaczuk. Entropy, 20 Jan. 2022, <https://www.ncbi.nlm.n
 \[4\] Saxena, Shipra, "Introduction to Long Short Term Memory(LSTM)." Analytics Vidhya. March 16, 2022. <https://www.analyticsvidhya.com/blog/2021/03/introduction-to-long-short-term-memory-lstm/>
 
 \[5\] Olah, Christopher, "Understanding LSTM Networks." colah's blog. August 27, 2015. <https://colah.github.io/posts/2015-08-Understanding-LSTMs/>
+
+\[6\] Vo, Nguyen and Slepaczuk, Robert. "Applying Hybrid ARIMA-SGARCH in Algorithmic Investment Strategies on S&P500 Index." Entropy. January 20, 2022. <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8870867/pdf/entropy-24-00158.pdf.>
+
+\[7\] "A Short Introduction to the RUGARCH Package." Unstarched. January 11, 2014. <http://www.unstarched.net/r-examples/rugarch/a-short-introduction-to-the-rugarch-package/.>

@@ -1,0 +1,87 @@
+---
+title: "Movement_model_draft"
+format: pdf
+editor: visual
+---
+
+### 4.2.6 Price Movement Model
+
+```{r, echo=TRUE}
+return_n <- sp_prices |> arrange(date) |>
+  mutate(return = adjusted - lag(adjusted)) |>
+  drop_na(return) %>% select(date, return)
+
+prices_movement <- return_n %>%  
+  mutate(movement = case_when(return >= 0 ~ 1, TRUE ~ 0)) %>% 
+  drop_na() %>% select(date, movement) 
+prices_movement %>% head(3)
+```
+
+```{r}
+# train test split
+train_data_b <- prices_movement |> filter(date <= test_date) %>% 
+  column_to_rownames('date')
+test_data_b <- prices_movement |> filter(date >= test_date) %>% 
+  column_to_rownames('date')
+# data reshape
+x_train_b = data_prep(train_data_n)$x; y_train_b = data_prep(train_data_n)$y
+```
+
+```{r, echo=TRUE}
+# Define LSTM for binary variable
+get_model_binary <- function(){
+  model <- keras_model_sequential() |>
+    layer_lstm(units = num_neurons, 
+               batch_input_shape = c(1, 22, 1), 
+               activation = 'relu', # Activation function is ReLU
+               stateful = TRUE) |>
+    layer_dense(units = 1) 
+  
+  model %>% compile(loss = 'binary_crossentropy', # Loss is binary
+                    metrics = 'accuracy', 
+    optimizer=optimizer_adam(learning_rate=learning_rate)) # Optimizer Adam
+}
+```
+
+```{r}
+set_random_seed(1209)
+lstm_model_b <- get_model_binary()
+lstm_model_b %>% fit(x = x_train_b, y = y_train_b, batch_size = 1,
+    epochs = 5, verbose = 2, shuffle = FALSE) -> history_b
+```
+
+```{r, fig.width=6, fig.height=3}
+data.frame("x" = seq(1, 15), "loss" = history_b$metrics$loss, 
+           'acc' = history_b$metrics$accuracy) -> df
+
+df %>% ggplot(aes(x = x)) +
+    geom_line(aes(y = loss), col = '#42a5f5') +
+  geom_point(aes(y = loss), col = '#2c8fdf') + 
+    geom_line(aes(y = acc), col = 'pink') +
+  geom_point(aes(y = acc), col = 'red') +
+  labs(title = 'Loss History',
+       x = 'Epoch', y = 'Loss(mse)')
+```
+
+```{r}
+model_prediction_lstm_b <- function(test_len, whole_data, model){
+  t <- test_len # test size
+  Tt <- nrow(whole_data) # whole data size
+  t_start <- Tt - t + 1 # test start date
+  predictions <- vector(length = t)
+  for (i in 1:t){
+    n <- t_start - 1 + i
+    test_set = pull(whole_data)[(n-22):n]
+    x_test = data_prep(test_set)$x
+    y_pred_scaled <- stats::predict(model, x_test, verbose = 0)
+    predictions[i] <- y_pred
+  }
+  pred_df <- data.frame('date' = rownames(whole_data)[t_start:Tt] %>% as_date(),
+    'pred' = predictions, 'actual' = pull(whole_data)[t_start:Tt])
+  pred_df
+}
+
+prices_movement_b <- prices_movement %>% column_to_rownames('date')
+pred_df_b <- model_prediction_lstm(nrow(test_data_n), prices_movement_b, lstm_model2)
+```
+
